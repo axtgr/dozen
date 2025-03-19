@@ -1,0 +1,22 @@
+{
+  "name": "dozen",
+  "version": "0.1.0",
+  "description": "",
+  "author": "Alex Schneider <me@schneider.ax>",
+  "license": "ISC",
+  "repository": "https://github.com/axtgr/dozen",
+  "keywords": ["config", "configuration", "env", "environment", "variables", "dotenv", "schema"],
+  "private": true,
+  "packageManager": "bun@1.2.4",
+  "engines": {
+    "node": ">=23.6.0"
+  },
+  "type": "module",
+  "main": "src/index.ts",
+  "files": ["src"],
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}
