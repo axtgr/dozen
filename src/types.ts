@@ -17,32 +17,36 @@ type Source = { name: string } & UnionOptional<
 
 type SourceFactory = (options: Options) => Source
 
-type Loader = { name: string } & UnionOptional<
+type Loader<TOptions extends object = object> = { name: string } & UnionOptional<
   | {
-      loadSync: (entry: Entry) => undefined | Entry | (undefined | Entry)[]
-      canLoadSync: (entry: Entry) => boolean
+      loadSync: (entry: Entry, options: TOptions) => undefined | Entry | (undefined | Entry)[]
+      canLoadSync: (entry: Entry, options: TOptions) => boolean
     }
   | {
-      loadAsync: (entry: Entry) => Promise<undefined | Entry | (undefined | Entry)[]>
-      canLoadAsync: (entry: Entry) => boolean
+      loadAsync: (
+        entry: Entry,
+        options: TOptions,
+      ) => Promise<undefined | Entry | (undefined | Entry)[]>
+      canLoadAsync: (entry: Entry, options: TOptions) => boolean
     }
 >
 
-type Mapper = { name: string } & UnionOptional<
-  { mapSync: (entry: Entry) => Entry } | { mapAsync: (entry: Entry) => Promise<Entry> }
+type Mapper<TOptions extends object = object> = { name: string } & UnionOptional<
+  | { mapSync: (entry: Entry, options: TOptions) => Entry }
+  | { mapAsync: (entry: Entry, options: TOptions) => Promise<Entry> }
 >
 
-type Reducer = { name: string } & UnionOptional<
-  | { reduceSync: (config: object, entry: Entry) => object }
-  | { reduceAsync: (config: object, entry: Entry) => Promise<object> }
+type Reducer<TOptions extends object = object> = { name: string } & UnionOptional<
+  | { reduceSync: (config: object, entry: Entry, options: TOptions) => object }
+  | { reduceAsync: (config: object, entry: Entry, options: TOptions) => Promise<object> }
 >
 
-type Transformer = { name: string } & UnionOptional<
-  | { transformSync: (config: object) => object }
-  | { transformAsync: (config: object) => Promise<object> }
+type Transformer<TOptions extends object = object> = { name: string } & UnionOptional<
+  | { transformSync: (config: object, options: TOptions) => object }
+  | { transformAsync: (config: object, options: TOptions) => Promise<object> }
 >
 
-type Validator<TOptions extends object = any> = { name: string } & UnionOptional<
+type Validator<TOptions extends object = object> = { name: string } & UnionOptional<
   | { validateSync: (config: object, options: TOptions) => void }
   | { validateAsync: (config: object, options: TOptions) => Promise<void> }
 >

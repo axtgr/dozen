@@ -27,19 +27,19 @@ function wrapSource(source: Source): WrappedSource {
   }
 }
 
-interface WrappedLoader {
-  canLoadSync: (entry: Entry) => boolean
-  canLoadAsync: (entry: Entry) => boolean
-  loadSync: (entry: Entry) => Entry[]
-  loadAsync: (entry: Entry) => Promise<Entry[]>
+interface WrappedLoader<TOptions extends object> {
+  canLoadSync: (entry: Entry, options: TOptions) => boolean
+  canLoadAsync: (entry: Entry, options: TOptions) => boolean
+  loadSync: (entry: Entry, options: TOptions) => Entry[]
+  loadAsync: (entry: Entry, options: TOptions) => Promise<Entry[]>
 }
 
-function wrapLoader(loader: Loader): WrappedLoader {
+function wrapLoader<TOptions extends object>(loader: Loader<TOptions>): WrappedLoader<TOptions> {
   return {
     canLoadSync: loader.canLoadSync ?? (() => false),
     loadSync: loader.loadSync
-      ? (entry) => {
-          const result = loader.loadSync(entry)
+      ? (entry, options) => {
+          const result = loader.loadSync(entry, options)
           return Array.isArray(result) ? result.filter(isObject) : result ? [result] : []
         }
       : () => {
@@ -49,8 +49,8 @@ function wrapLoader(loader: Loader): WrappedLoader {
         },
     canLoadAsync: loader.canLoadAsync ?? (() => false),
     loadAsync: loader.loadAsync
-      ? async (entry) => {
-          const result = await loader.loadAsync(entry)
+      ? async (entry, options) => {
+          const result = await loader.loadAsync(entry, options)
           return Array.isArray(result) ? result.filter(isObject) : result ? [result] : []
         }
       : async () => {
@@ -61,61 +61,65 @@ function wrapLoader(loader: Loader): WrappedLoader {
   }
 }
 
-interface WrappedMapper {
-  mapSync: (entry: Entry) => Entry
-  mapAsync: (entry: Entry) => Promise<Entry>
+interface WrappedMapper<TOptions extends object> {
+  mapSync: (entry: Entry, options: TOptions) => Entry
+  mapAsync: (entry: Entry, options: TOptions) => Promise<Entry>
 }
 
-function wrapMapper(mapper: Mapper): WrappedMapper {
+function wrapMapper<TOptions extends object>(mapper: Mapper<TOptions>): WrappedMapper<TOptions> {
   return {
     mapSync: mapper.mapSync
-      ? (entry) => mapper.mapSync(entry)
+      ? (entry, options) => mapper.mapSync(entry, options)
       : () => {
           throw new Error(`Mapper ${mapper.name} doesn't support sync maps. Call mapAsync instead`)
         },
     mapAsync: mapper.mapAsync
-      ? async (entry) => mapper.mapAsync(entry)
-      : async (entry) => mapper.mapSync(entry),
+      ? async (entry, options) => mapper.mapAsync(entry, options)
+      : async (entry, options) => mapper.mapSync(entry, options),
   }
 }
 
-interface WrappedReducer {
-  reduceSync: (config: object, entry: Entry) => object
-  reduceAsync: (config: object, entry: Entry) => Promise<object>
+interface WrappedReducer<TOptions extends object> {
+  reduceSync: (config: object, entry: Entry, options: TOptions) => object
+  reduceAsync: (config: object, entry: Entry, options: TOptions) => Promise<object>
 }
 
-function wrapReducer(reducer: Reducer): WrappedReducer {
+function wrapReducer<TOptions extends object>(
+  reducer: Reducer<TOptions>,
+): WrappedReducer<TOptions> {
   return {
     reduceSync: reducer.reduceSync
-      ? (config, entry) => reducer.reduceSync(config, entry)
+      ? (config, entry, options) => reducer.reduceSync(config, entry, options)
       : () => {
           throw new Error(
             `Reducer ${reducer.name} doesn't support sync reduces. Call reduceAsync instead`,
           )
         },
     reduceAsync: reducer.reduceAsync
-      ? async (config, entry) => reducer.reduceAsync(config, entry)
-      : async (config, entry) => reducer.reduceSync(config, entry),
+      ? async (config, entry, options) => reducer.reduceAsync(config, entry, options)
+      : async (config, entry, options) => reducer.reduceSync(config, entry, options),
   }
 }
 
-interface WrappedTransformer {
-  transformSync: (config: object) => object
-  transformAsync: (config: object) => Promise<object>
+interface WrappedTransformer<TOptions extends object> {
+  transformSync: (config: object, options: TOptions) => object
+  transformAsync: (config: object, options: TOptions) => Promise<object>
 }
 
-function wrapTransformer(transformer: Transformer): WrappedTransformer {
+function wrapTransformer<TOptions extends object>(
+  transformer: Transformer<TOptions>,
+): WrappedTransformer<TOptions> {
   return {
     transformSync: transformer.transformSync
-      ? (config) => transformer.transformSync(config)
+      ? (config, options) => transformer.transformSync(config, options)
       : () => {
           throw new Error(
             `Transformer ${transformer.name} doesn't support sync transforms. Call transformAsync instead`,
           )
         },
     transformAsync: transformer.transformAsync
-      ? async (config) => transformer.transformAsync(config)
-      : async (config) => transformer.transformSync(config),
+      ? async (config, options) => transformer.transformAsync(config, options)
+      : async (config, options) => transformer.transformSync(config, options),
   }
 }
 

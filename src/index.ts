@@ -20,22 +20,48 @@ import {
   wrapValidator,
 } from './wrappers.ts'
 
-type ExtractOptions<T> = T extends Validator<infer O> ? O : never
+type ExtractOptions<T> = T extends Loader<infer O>
+  ? O
+  : T extends Mapper<infer O>
+    ? O
+    : T extends Reducer<infer O>
+      ? O
+      : T extends Transformer<infer O>
+        ? O
+        : T extends Validator<infer O>
+          ? O
+          : never
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
   : never
 
-type DozenOptions<Validators extends Validator[]> = {
+type DozenOptions<
+  TLoaders extends Loader[],
+  TMappers extends Mapper[],
+  TReducer extends Reducer,
+  Transformers extends Transformer[],
+  TValidators extends Validator[],
+> = {
   sources: (SourceFactory | undefined | false | null)[]
-  loaders?: (Loader | undefined | false | null)[]
-  mappers?: Mapper[]
-  reducer?: Reducer
-  transformers?: Transformer[]
-  validators: Validators
-} & UnionToIntersection<ExtractOptions<Validators[number]>>
+  loaders?: TLoaders
+  mappers?: TMappers
+  reducer?: TReducer
+  transformers?: Transformers
+  validators: TValidators
+} & UnionToIntersection<ExtractOptions<TLoaders[number]>> &
+  UnionToIntersection<ExtractOptions<TMappers[number]>> &
+  ExtractOptions<TReducer> &
+  UnionToIntersection<ExtractOptions<Transformers[number]>> &
+  UnionToIntersection<ExtractOptions<TValidators[number]>>
 
-function dozen<Validators extends Validator[]>(name: string, options: DozenOptions<Validators>) {
+function dozen<
+  TLoaders extends Loader[],
+  TMappers extends Mapper[],
+  TReducer extends Reducer,
+  TTransformers extends Transformer[],
+  TValidators extends Validator<any>[],
+>(name: string, options: DozenOptions<TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
   const sources = options.sources
     .filter((sf) => typeof sf === 'function')
     .map((sourceFactory) => wrapSource(sourceFactory({ name })))
@@ -66,12 +92,12 @@ function dozen<Validators extends Validator[]>(name: string, options: DozenOptio
       const entriesById = source
         .readSync()
         .flatMap((entry) => {
-          const loader = loaders.find((l) => l.canLoadSync(entry))
-          return loader ? loader.loadSync(entry) : [entry]
+          const loader = loaders.find((l) => l.canLoadSync(entry, options))
+          return loader ? loader.loadSync(entry, options) : [entry]
         })
         .reduce((entriesById, entry) => {
           entry = mappers.reduce((entry, mapper) => {
-            return mapper.mapSync(entry)
+            return mapper.mapSync(entry, options)
           }, entry as Entry)
           const entriesWithSameId = entriesById.get(entry.id) || []
           entriesById.set(entry.id, [...entriesWithSameId, entry])
@@ -93,13 +119,13 @@ function dozen<Validators extends Validator[]>(name: string, options: DozenOptio
           .flat()
           .filter((entry) => typeof entry.value === 'object' && entry.value !== null)
         config = entries.reduce((config, entry) => {
-          return reducer.reduceSync(config, entry)
+          return reducer.reduceSync(config, entry, options)
         }, Object.create(null))
         config = transformers.reduce((config, transformer) => {
-          return transformer.transformSync(config!)
+          return transformer.transformSync(config!, options)
         }, config)
         validators.forEach((validator) => {
-          validator.validateSync(options, config!)
+          validator.validateSync(config!, options)
         })
       }
       return config
