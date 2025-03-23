@@ -75,9 +75,7 @@ function wrapMapper(mapper: Mapper): WrappedMapper {
         },
     mapAsync: mapper.mapAsync
       ? async (entry) => mapper.mapAsync(entry)
-      : async () => {
-          throw new Error(`Mapper ${mapper.name} doesn't support async maps. Call mapSync instead`)
-        },
+      : async (entry) => mapper.mapSync(entry),
   }
 }
 
@@ -97,11 +95,7 @@ function wrapReducer(reducer: Reducer): WrappedReducer {
         },
     reduceAsync: reducer.reduceAsync
       ? async (config, entry) => reducer.reduceAsync(config, entry)
-      : async () => {
-          throw new Error(
-            `Reducer ${reducer.name} doesn't support async reduces. Call reduceSync instead`,
-          )
-        },
+      : async (config, entry) => reducer.reduceSync(config, entry),
   }
 }
 
@@ -121,11 +115,7 @@ function wrapTransformer(transformer: Transformer): WrappedTransformer {
         },
     transformAsync: transformer.transformAsync
       ? async (config) => transformer.transformAsync(config)
-      : async () => {
-          throw new Error(
-            `Transformer ${transformer.name} doesn't support async transforms. Call transformSync instead`,
-          )
-        },
+      : async (config) => transformer.transformSync(config),
   }
 }
 
@@ -145,11 +135,7 @@ function wrapValidator(validator: Validator): WrappedValidator {
         },
     validateAsync: validator.validateAsync
       ? async (config) => validator.validateAsync(config)
-      : async () => {
-          throw new Error(
-            `Validator ${validator.name} doesn't support async validations. Call validateSync instead`,
-          )
-        },
+      : async (config) => validator.validateSync(config),
   }
 }
 
