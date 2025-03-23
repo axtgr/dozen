@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "strict": true,
+    "noImplicitAny": true,
     "noEmit": true,
     "target": "esnext",
     "module": "nodenext",

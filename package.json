@@ -1,7 +1,7 @@
 {
   "name": "dozen",
   "version": "0.1.0",
-  "description": "",
+  "description": "Read config from a dozen of sources",
   "author": "Alex Schneider <me@schneider.ax>",
   "license": "ISC",
   "repository": "https://github.com/axtgr/dozen",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.13.10",
+    "type-fest": "^4.37.0",
     "typescript": "^5.8.2"
   }
 }
