@@ -119,23 +119,25 @@ function wrapTransformer(transformer: Transformer): WrappedTransformer {
   }
 }
 
-interface WrappedValidator {
-  validateSync: (config: object) => void
-  validateAsync: (config: object) => Promise<void>
+interface WrappedValidator<TOptions extends object> {
+  validateSync: (config: object, options: TOptions) => void
+  validateAsync: (config: object, options: TOptions) => Promise<void>
 }
 
-function wrapValidator(validator: Validator): WrappedValidator {
+function wrapValidator<TOptions extends object>(
+  validator: Validator<TOptions>,
+): WrappedValidator<TOptions> {
   return {
     validateSync: validator.validateSync
-      ? (config) => validator.validateSync(config)
+      ? (config, options) => validator.validateSync(config, options)
       : () => {
           throw new Error(
             `Validator ${validator.name} doesn't support sync validations. Call validateAsync instead`,
           )
         },
     validateAsync: validator.validateAsync
-      ? async (config) => validator.validateAsync(config)
-      : async (config) => validator.validateSync(config),
+      ? async (config, options) => validator.validateAsync(config, options)
+      : async (config, options) => validator.validateSync(config, options),
   }
 }
 

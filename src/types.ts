@@ -42,8 +42,9 @@ type Transformer = { name: string } & UnionOptional<
   | { transformAsync: (config: object) => Promise<object> }
 >
 
-type Validator = { name: string } & UnionOptional<
-  { validateSync: (config: object) => void } | { validateAsync: (config: object) => Promise<void> }
+type Validator<TOptions extends object = any> = { name: string } & UnionOptional<
+  | { validateSync: (config: object, options: TOptions) => void }
+  | { validateAsync: (config: object, options: TOptions) => Promise<void> }
 >
 
 export type {

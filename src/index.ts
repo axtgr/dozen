@@ -1,3 +1,4 @@
+import assignReducer from './reducers/assign.ts'
 import type {
   Entry,
   Loader,
@@ -19,21 +20,22 @@ import {
   wrapValidator,
 } from './wrappers.ts'
 
-const assignReducer: Reducer = {
-  name: 'assignReducer',
-  reduceSync: (config, entry) => Object.assign(config, entry.value),
-}
+type ExtractOptions<T> = T extends Validator<infer O> ? O : never
 
-interface DozenOptions {
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+  ? I
+  : never
+
+type DozenOptions<Validators extends Validator[]> = {
   sources: (SourceFactory | undefined | false | null)[]
   loaders?: (Loader | undefined | false | null)[]
   mappers?: Mapper[]
   reducer?: Reducer
   transformers?: Transformer[]
-  validators?: Validator[]
-}
+  validators: Validators
+} & UnionToIntersection<ExtractOptions<Validators[number]>>
 
-function dozen(name: string, options: DozenOptions) {
+function dozen<Validators extends Validator[]>(name: string, options: DozenOptions<Validators>) {
   const sources = options.sources
     .filter((sf) => typeof sf === 'function')
     .map((sourceFactory) => wrapSource(sourceFactory({ name })))
@@ -97,7 +99,7 @@ function dozen(name: string, options: DozenOptions) {
           return transformer.transformSync(config!)
         }, config)
         validators.forEach((validator) => {
-          validator.validateSync(config!)
+          validator.validateSync(options, config!)
         })
       }
       return config
