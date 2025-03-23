@@ -28,16 +28,16 @@ type Loader = { name: string } & UnionOptional<
     }
 >
 
-type EntryTransformer = { name: string } & UnionOptional<
-  { transformSync: (entry: Entry) => Entry } | { transformAsync: (entry: Entry) => Promise<Entry> }
+type Mapper = { name: string } & UnionOptional<
+  { mapSync: (entry: Entry) => Entry } | { mapAsync: (entry: Entry) => Promise<Entry> }
 >
 
-type Merger = { name: string } & UnionOptional<
-  | { mergeSync: (config: object, entry: Entry) => object }
-  | { mergeAsync: (config: object, entry: Entry) => Promise<object> }
+type Reducer = { name: string } & UnionOptional<
+  | { reduceSync: (config: object, entry: Entry) => object }
+  | { reduceAsync: (config: object, entry: Entry) => Promise<object> }
 >
 
-type ConfigTransformer = { name: string } & UnionOptional<
+type Transformer = { name: string } & UnionOptional<
   | { transformSync: (config: object) => object }
   | { transformAsync: (config: object) => Promise<object> }
 >
@@ -52,8 +52,8 @@ export type {
   Source,
   SourceFactory,
   Loader,
-  EntryTransformer,
-  Merger,
-  ConfigTransformer,
+  Mapper,
+  Reducer,
+  Transformer,
   Validator,
 }

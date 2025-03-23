@@ -1,11 +1,11 @@
 import type {
-  ConfigTransformer,
   Entry,
-  EntryTransformer,
   Loader,
-  Merger,
+  Mapper,
+  Reducer,
   Source,
   SourceFactory,
+  Transformer,
   Validator,
 } from './types.ts'
 import { isObject } from './utils.ts'
@@ -70,49 +70,69 @@ function wrapLoader(loader: Loader): WrappedLoader {
   }
 }
 
-interface WrappedEntryTransformer {
-  transformSync: (entry: Entry) => Entry
-  transformAsync: (entry: Entry) => Promise<Entry>
+interface WrappedMapper {
+  mapSync: (entry: Entry) => Entry
+  mapAsync: (entry: Entry) => Promise<Entry>
 }
 
-function wrapEntryTransformer(transformer: EntryTransformer): WrappedEntryTransformer {
+function wrapMapper(mapper: Mapper): WrappedMapper {
   return {
-    transformSync: transformer.transformSync
-      ? (entry) => transformer.transformSync(entry)
+    mapSync: mapper.mapSync
+      ? (entry) => mapper.mapSync(entry)
+      : () => {
+          throw new Error(`Mapper ${mapper.name} doesn't support sync maps. Call mapAsync instead`)
+        },
+    mapAsync: mapper.mapAsync
+      ? async (entry) => mapper.mapAsync(entry)
+      : async () => {
+          throw new Error(`Mapper ${mapper.name} doesn't support async maps. Call mapSync instead`)
+        },
+  }
+}
+
+interface WrappedReducer {
+  reduceSync: (config: object, entry: Entry) => object
+  reduceAsync: (config: object, entry: Entry) => Promise<object>
+}
+
+function wrapReducer(reducer: Reducer): WrappedReducer {
+  return {
+    reduceSync: reducer.reduceSync
+      ? (config, entry) => reducer.reduceSync(config, entry)
       : () => {
           throw new Error(
-            `EntryTransformer ${transformer.name} doesn't support sync transforms. Call transformAsync instead`,
+            `Reducer ${reducer.name} doesn't support sync reduces. Call reduceAsync instead`,
           )
         },
-    transformAsync: transformer.transformAsync
-      ? async (entry) => transformer.transformAsync(entry)
+    reduceAsync: reducer.reduceAsync
+      ? async (config, entry) => reducer.reduceAsync(config, entry)
       : async () => {
           throw new Error(
-            `EntryTransformer ${transformer.name} doesn't support async transforms. Call transformSync instead`,
+            `Reducer ${reducer.name} doesn't support async reduces. Call reduceSync instead`,
           )
         },
   }
 }
 
-interface WrappedMerger {
-  mergeSync: (config: object, entry: Entry) => object
-  mergeAsync: (config: object, entry: Entry) => Promise<object>
+interface WrappedTransformer {
+  transformSync: (config: object) => object
+  transformAsync: (config: object) => Promise<object>
 }
 
-function wrapMerger(merger: Merger): WrappedMerger {
+function wrapTransformer(transformer: Transformer): WrappedTransformer {
   return {
-    mergeSync: merger.mergeSync
-      ? (config, entry) => merger.mergeSync(config, entry)
+    transformSync: transformer.transformSync
+      ? (config) => transformer.transformSync(config)
       : () => {
           throw new Error(
-            `Merger ${merger.name} doesn't support sync merges. Call mergeAsync instead`,
+            `Transformer ${transformer.name} doesn't support sync transforms. Call transformAsync instead`,
           )
         },
-    mergeAsync: merger.mergeAsync
-      ? async (config, entry) => merger.mergeAsync(config, entry)
+    transformAsync: transformer.transformAsync
+      ? async (config) => transformer.transformAsync(config)
       : async () => {
           throw new Error(
-            `Merger ${merger.name} doesn't support async merges. Call mergeSync instead`,
+            `Transformer ${transformer.name} doesn't support async transforms. Call transformSync instead`,
           )
         },
   }
@@ -129,38 +149,14 @@ function wrapValidator(validator: Validator): WrappedValidator {
       ? (config) => validator.validateSync(config)
       : () => {
           throw new Error(
-            `Validator ${validator.name} doesn't support sync merges. Call validateAsync instead`,
+            `Validator ${validator.name} doesn't support sync validations. Call validateAsync instead`,
           )
         },
     validateAsync: validator.validateAsync
       ? async (config) => validator.validateAsync(config)
       : async () => {
           throw new Error(
-            `Validator ${validator.name} doesn't support async merges. Call mergeSync instead`,
-          )
-        },
-  }
-}
-
-interface WrappedConfigTransformer {
-  transformSync: (config: object) => object
-  transformAsync: (config: object) => Promise<object>
-}
-
-function wrapConfigTransformer(transformer: ConfigTransformer): WrappedConfigTransformer {
-  return {
-    transformSync: transformer.transformSync
-      ? (config) => transformer.transformSync(config)
-      : () => {
-          throw new Error(
-            `ConfigTransformer ${transformer.name} doesn't support sync transforms. Call transformAsync instead`,
-          )
-        },
-    transformAsync: transformer.transformAsync
-      ? async (config) => transformer.transformAsync(config)
-      : async () => {
-          throw new Error(
-            `ConfigTransformer ${transformer.name} doesn't support async transforms. Call transformSync instead`,
+            `Validator ${validator.name} doesn't support async validations. Call validateSync instead`,
           )
         },
   }
@@ -169,9 +165,9 @@ function wrapConfigTransformer(transformer: ConfigTransformer): WrappedConfigTra
 interface DozenOptions {
   sources: (SourceFactory | undefined | false | null)[]
   loaders: (Loader | undefined | false | null)[]
-  entryTransformers: EntryTransformer[]
-  merger: Merger
-  configTransformers: ConfigTransformer[]
+  mappers: Mapper[]
+  reducer: Reducer
+  transformers: Transformer[]
   validators: Validator[]
 }
 
@@ -180,13 +176,11 @@ function dozen(name: string, options: DozenOptions) {
     .filter((sf) => typeof sf === 'function')
     .map((sourceFactory) => wrapSource(sourceFactory({ name })))
   const loaders = options.loaders.filter(isObject).map((loader) => wrapLoader(loader))
-  const entryTransformers = options.entryTransformers
+  const mappers = options.mappers.filter(isObject).map((mapper) => wrapMapper(mapper))
+  const reducer = wrapReducer(options.reducer)
+  const transformers = options.transformers
     .filter(isObject)
-    .map((entryTransformer) => wrapEntryTransformer(entryTransformer))
-  const merger = wrapMerger(options.merger)
-  const configTransformers = options.configTransformers
-    .filter(isObject)
-    .map((configTransformer) => wrapConfigTransformer(configTransformer))
+    .map((transformer) => wrapTransformer(transformer))
   const validators = options.validators
     .filter(isObject)
     .map((validator) => wrapValidator(validator))
@@ -212,8 +206,8 @@ function dozen(name: string, options: DozenOptions) {
           return loader ? loader.loadSync(entry) : [entry]
         })
         .reduce((entriesById, entry) => {
-          entry = entryTransformers.reduce((entry, transformer) => {
-            return transformer.transformSync(entry)
+          entry = mappers.reduce((entry, mapper) => {
+            return mapper.mapSync(entry)
           }, entry as Entry)
           const entriesWithSameId = entriesById.get(entry.id) || []
           entriesById.set(entry.id, [...entriesWithSameId, entry])
@@ -235,9 +229,9 @@ function dozen(name: string, options: DozenOptions) {
           .flat()
           .filter((entry) => typeof entry.value === 'object' && entry.value !== null)
         config = entries.reduce((config, entry) => {
-          return merger.mergeSync(config, entry)
+          return reducer.reduceSync(config, entry)
         }, Object.create(null))
-        config = configTransformers.reduce((config, transformer) => {
+        config = transformers.reduce((config, transformer) => {
           return transformer.transformSync(config!)
         }, config)
         validators.forEach((validator) => {
