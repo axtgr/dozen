@@ -3,8 +3,10 @@ import type {
   Entry,
   EntryTransformer,
   Loader,
+  Merger,
   Source,
   SourceFactory,
+  Validator,
 } from './types.ts'
 import { isObject } from './utils.ts'
 
@@ -92,6 +94,54 @@ function wrapEntryTransformer(transformer: EntryTransformer): WrappedEntryTransf
   }
 }
 
+interface WrappedMerger {
+  mergeSync: (config: object, entry: Entry) => object
+  mergeAsync: (config: object, entry: Entry) => Promise<object>
+}
+
+function wrapMerger(merger: Merger): WrappedMerger {
+  return {
+    mergeSync: merger.mergeSync
+      ? (config, entry) => merger.mergeSync(config, entry)
+      : () => {
+          throw new Error(
+            `Merger ${merger.name} doesn't support sync merges. Call mergeAsync instead`,
+          )
+        },
+    mergeAsync: merger.mergeAsync
+      ? async (config, entry) => merger.mergeAsync(config, entry)
+      : async () => {
+          throw new Error(
+            `Merger ${merger.name} doesn't support async merges. Call mergeSync instead`,
+          )
+        },
+  }
+}
+
+interface WrappedValidator {
+  validateSync: (config: object) => void
+  validateAsync: (config: object) => Promise<void>
+}
+
+function wrapValidator(validator: Validator): WrappedValidator {
+  return {
+    validateSync: validator.validateSync
+      ? (config) => validator.validateSync(config)
+      : () => {
+          throw new Error(
+            `Validator ${validator.name} doesn't support sync merges. Call validateAsync instead`,
+          )
+        },
+    validateAsync: validator.validateAsync
+      ? async (config) => validator.validateAsync(config)
+      : async () => {
+          throw new Error(
+            `Validator ${validator.name} doesn't support async merges. Call mergeSync instead`,
+          )
+        },
+  }
+}
+
 interface WrappedConfigTransformer {
   transformSync: (config: object) => object
   transformAsync: (config: object) => Promise<object>
@@ -120,7 +170,9 @@ interface DozenOptions {
   sources: (SourceFactory | undefined | false | null)[]
   loaders: (Loader | undefined | false | null)[]
   entryTransformers: EntryTransformer[]
+  merger: Merger
   configTransformers: ConfigTransformer[]
+  validators: Validator[]
 }
 
 function dozen(name: string, options: DozenOptions) {
@@ -131,9 +183,13 @@ function dozen(name: string, options: DozenOptions) {
   const entryTransformers = options.entryTransformers
     .filter(isObject)
     .map((entryTransformer) => wrapEntryTransformer(entryTransformer))
+  const merger = wrapMerger(options.merger)
   const configTransformers = options.configTransformers
     .filter(isObject)
     .map((configTransformer) => wrapConfigTransformer(configTransformer))
+  const validators = options.validators
+    .filter(isObject)
+    .map((validator) => wrapValidator(validator))
 
   const entriesBySource = new Map<WrappedSource, Map<string, Entry[]>>()
   let sourcesToRead = sources
@@ -172,19 +228,21 @@ function dozen(name: string, options: DozenOptions) {
     get() {
       if (sourcesToRead.length) {
         readSourcesSync()
-        const values = entriesBySource
+        const entries = entriesBySource
           .values()
           .flatMap((entriesById) => entriesById.values())
           .toArray()
           .flat()
-          .map((entry) => entry.value)
-          .filter((value) => typeof value === 'object' && value !== null)
-        config = configTransformers.reduce(
-          (config, transformer) => {
-            return transformer.transformSync(config)
-          },
-          Object.assign({}, ...values),
-        )
+          .filter((entry) => typeof entry.value === 'object' && entry.value !== null)
+        config = entries.reduce((config, entry) => {
+          return merger.mergeSync(config, entry)
+        }, Object.create(null))
+        config = configTransformers.reduce((config, transformer) => {
+          return transformer.transformSync(config!)
+        }, config)
+        validators.forEach((validator) => {
+          validator.validateSync(config!)
+        })
       }
       return config
     },
