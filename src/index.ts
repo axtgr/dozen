@@ -1,14 +1,5 @@
 import assignReducer from './reducers/assign.ts'
-import type {
-  Entry,
-  Loader,
-  Mapper,
-  Reducer,
-  Source,
-  SourceFactory,
-  Transformer,
-  Validator,
-} from './types.ts'
+import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
 import { isObject } from './utils.ts'
 import {
   type WrappedSource,
@@ -20,30 +11,33 @@ import {
   wrapValidator,
 } from './wrappers.ts'
 
-type ExtractOptions<T> = T extends Loader<infer O>
+type ExtractOptions<T> = T extends Source<infer O>
   ? O
-  : T extends Mapper<infer O>
+  : T extends Loader<infer O>
     ? O
-    : T extends Reducer<infer O>
+    : T extends Mapper<infer O>
       ? O
-      : T extends Transformer<infer O>
+      : T extends Reducer<infer O>
         ? O
-        : T extends Validator<infer O>
+        : T extends Transformer<infer O>
           ? O
-          : never
+          : T extends Validator<infer O>
+            ? O
+            : never
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
   : never
 
 type DozenOptions<
+  TSources extends Source[],
   TLoaders extends Loader[],
   TMappers extends Mapper[],
   TReducer extends Reducer,
   Transformers extends Transformer[],
   TValidators extends Validator[],
 > = {
-  sources: (SourceFactory | undefined | false | null)[]
+  sources: TSources
   loaders?: TLoaders
   mappers?: TMappers
   reducer?: TReducer
@@ -56,15 +50,14 @@ type DozenOptions<
   UnionToIntersection<ExtractOptions<TValidators[number]>>
 
 function dozen<
+  TSources extends Source[],
   TLoaders extends Loader[],
   TMappers extends Mapper[],
   TReducer extends Reducer,
   TTransformers extends Transformer[],
   TValidators extends Validator<any>[],
->(name: string, options: DozenOptions<TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
-  const sources = options.sources
-    .filter((sf) => typeof sf === 'function')
-    .map((sourceFactory) => wrapSource(sourceFactory({ name })))
+>(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
+  const sources = options.sources.filter(isObject).map((source) => wrapSource(source))
   const loaders = (options.loaders ?? []).filter(isObject).map((loader) => wrapLoader(loader))
   const mappers = (options.mappers ?? []).filter(isObject).map((mapper) => wrapMapper(mapper))
   const reducer = wrapReducer(options.reducer ?? assignReducer)

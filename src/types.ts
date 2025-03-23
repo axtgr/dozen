@@ -11,11 +11,10 @@ interface Entry {
   tags?: string[]
 }
 
-type Source = { name: string } & UnionOptional<
-  { readSync: () => Entry[] } | { readAsync: () => Promise<Entry[]> }
+type Source<TOptions extends object = object> = { name: string } & UnionOptional<
+  | { readSync: (options: TOptions) => Entry | Entry[] }
+  | { readAsync: (options: TOptions) => Promise<Entry | Entry[]> }
 >
-
-type SourceFactory = (options: Options) => Source
 
 type Loader<TOptions extends object = object> = { name: string } & UnionOptional<
   | {
@@ -51,14 +50,4 @@ type Validator<TOptions extends object = object> = { name: string } & UnionOptio
   | { validateAsync: (config: object, options: TOptions) => Promise<void> }
 >
 
-export type {
-  Options,
-  Entry,
-  Source,
-  SourceFactory,
-  Loader,
-  Mapper,
-  Reducer,
-  Transformer,
-  Validator,
-}
+export type { Options, Entry, Source, Loader, Mapper, Reducer, Transformer, Validator }

@@ -1,7 +1,7 @@
-import type { SourceFactory } from '../types.ts'
+import type { Source } from '../types.ts'
 
-function env(): SourceFactory {
-  return () => ({
+function env(): Source {
+  return {
     name: 'env',
     readSync() {
       return [
@@ -13,7 +13,7 @@ function env(): SourceFactory {
         },
       ]
     },
-  })
+  }
 }
 
 export default env
