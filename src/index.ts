@@ -30,19 +30,19 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
   : never
 
 type DozenOptions<
-  TSources extends Source[],
-  TLoaders extends Loader[],
-  TMappers extends Mapper[],
-  TReducer extends Reducer,
-  Transformers extends Transformer[],
-  TValidators extends Validator[],
+  TSources extends (Source | undefined | null | false)[],
+  TLoaders extends (Loader | undefined | null | false)[],
+  TMappers extends (Mapper | undefined | null | false)[],
+  TReducer extends Reducer | undefined | null | false,
+  Transformers extends (Transformer | undefined | null | false)[],
+  TValidators extends (Validator | undefined | null | false)[],
 > = {
-  sources: TSources
+  sources?: TSources
   loaders?: TLoaders
   mappers?: TMappers
   reducer?: TReducer
   transformers?: Transformers
-  validators: TValidators
+  validators?: TValidators
 } & UnionToIntersection<ExtractOptions<TLoaders[number]>> &
   UnionToIntersection<ExtractOptions<TMappers[number]>> &
   ExtractOptions<TReducer> &
@@ -50,23 +50,21 @@ type DozenOptions<
   UnionToIntersection<ExtractOptions<TValidators[number]>>
 
 function dozen<
-  TSources extends Source[],
-  TLoaders extends Loader[],
-  TMappers extends Mapper[],
-  TReducer extends Reducer,
-  TTransformers extends Transformer[],
-  TValidators extends Validator<any>[],
+  TSources extends (Source | undefined | null | false)[],
+  TLoaders extends (Loader | undefined | null | false)[],
+  TMappers extends (Mapper | undefined | null | false)[],
+  TReducer extends Reducer | undefined | null | false,
+  TTransformers extends (Transformer | undefined | null | false)[],
+  TValidators extends (Validator<any> | undefined | null | false)[],
 >(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
-  const sources = options.sources.filter(isObject).map((source) => wrapSource(source))
-  const loaders = (options.loaders ?? []).filter(isObject).map((loader) => wrapLoader(loader))
-  const mappers = (options.mappers ?? []).filter(isObject).map((mapper) => wrapMapper(mapper))
-  const reducer = wrapReducer(options.reducer ?? assignReducer)
-  const transformers = (options.transformers ?? [])
-    .filter(isObject)
-    .map((transformer) => wrapTransformer(transformer))
-  const validators = (options.validators ?? [])
-    .filter(isObject)
-    .map((validator) => wrapValidator(validator))
+  const sources = options.sources?.filter(isObject).map((source) => wrapSource(source)) || []
+  const loaders = options.loaders?.filter(isObject).map((loader) => wrapLoader(loader)) || []
+  const mappers = options.mappers?.filter(isObject).map((mapper) => wrapMapper(mapper)) || []
+  const reducer = wrapReducer(options.reducer || assignReducer)
+  const transformers =
+    options.transformers?.filter(isObject).map((transformer) => wrapTransformer(transformer)) || []
+  const validators =
+    options.validators?.filter(isObject).map((validator) => wrapValidator(validator)) || []
 
   const entriesBySource = new Map<WrappedSource, Map<string, Entry[]>>()
   let sourcesToRead = sources
