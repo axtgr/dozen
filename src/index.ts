@@ -1,6 +1,6 @@
 import assignReducer from './reducers/assign.ts'
 import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
-import { isObject } from './utils.ts'
+import { toFilteredArray } from './utils.ts'
 import {
   type WrappedSource,
   wrapLoader,
@@ -57,14 +57,16 @@ function dozen<
   TTransformers extends (Transformer | undefined | null | false)[],
   TValidators extends (Validator<any> | undefined | null | false)[],
 >(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
-  const sources = options.sources?.filter(isObject).map((source) => wrapSource(source)) || []
-  const loaders = options.loaders?.filter(isObject).map((loader) => wrapLoader(loader)) || []
-  const mappers = options.mappers?.filter(isObject).map((mapper) => wrapMapper(mapper)) || []
+  const sources = toFilteredArray(options.sources).map((source) => wrapSource(source))
+  const loaders = toFilteredArray(options.loaders).map((loader) => wrapLoader(loader))
+  const mappers = toFilteredArray(options.mappers).map((mapper) => wrapMapper(mapper))
   const reducer = wrapReducer(options.reducer || assignReducer)
-  const transformers =
-    options.transformers?.filter(isObject).map((transformer) => wrapTransformer(transformer)) || []
-  const validators =
-    options.validators?.filter(isObject).map((validator) => wrapValidator(validator)) || []
+  const transformers = toFilteredArray(options.transformers).map((transformer) =>
+    wrapTransformer(transformer),
+  )
+  const validators = toFilteredArray(options.validators).map((validator) =>
+    wrapValidator(validator),
+  )
 
   const entriesBySource = new Map<WrappedSource, Map<string, Entry[]>>()
   let sourcesToRead = sources
@@ -81,7 +83,7 @@ function dozen<
   const readSourcesSync = () => {
     sourcesToRead.forEach((source) => {
       const entriesById = source
-        .readSync()
+        .readSync(options)
         .flatMap((entry) => {
           const loader = loaders.find((l) => l.canLoadSync(entry, options))
           return loader ? loader.loadSync(entry, options) : [entry]

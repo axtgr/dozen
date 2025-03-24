@@ -6,33 +6,56 @@ interface Options {
 
 interface Entry {
   id: string
+  rootId: string
   source: Source
   value: unknown
+  loaded?: boolean
   tags?: string[]
 }
 
 type Source<TOptions extends object = object> = { name: string } & UnionOptional<
-  | { readSync: (options: TOptions) => Entry | Entry[] }
-  | { readAsync: (options: TOptions) => Promise<Entry | Entry[]> }
+  | {
+      readSync: (
+        options: TOptions,
+      ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
+    }
+  | {
+      readAsync: (
+        options: TOptions,
+      ) => Promise<undefined | null | false | Entry | (undefined | null | false | Entry)[]>
+    }
 >
 
 type Loader<TOptions extends object = object> = { name: string } & UnionOptional<
   | {
-      loadSync: (entry: Entry, options: TOptions) => undefined | Entry | (undefined | Entry)[]
       canLoadSync: (entry: Entry, options: TOptions) => boolean
+      loadSync: (
+        entry: Entry,
+        options: TOptions,
+      ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
     }
   | {
+      canLoadAsync: (entry: Entry, options: TOptions) => boolean
       loadAsync: (
         entry: Entry,
         options: TOptions,
-      ) => Promise<undefined | Entry | (undefined | Entry)[]>
-      canLoadAsync: (entry: Entry, options: TOptions) => boolean
+      ) => Promise<undefined | null | false | Entry | (undefined | null | false | Entry)[]>
     }
 >
 
 type Mapper<TOptions extends object = object> = { name: string } & UnionOptional<
-  | { mapSync: (entry: Entry, options: TOptions) => Entry }
-  | { mapAsync: (entry: Entry, options: TOptions) => Promise<Entry> }
+  | {
+      mapSync: (
+        entry: Entry,
+        options: TOptions,
+      ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
+    }
+  | {
+      mapAsync: (
+        entry: Entry,
+        options: TOptions,
+      ) => Promise<undefined | null | false | Entry | (undefined | null | false | Entry)[]>
+    }
 >
 
 type Reducer<TOptions extends object = object> = { name: string } & UnionOptional<

@@ -23,5 +23,11 @@ function isObject<T extends object>(value: T | null | undefined | false): value 
   return typeof value === 'object' && value !== null
 }
 
-export { isObject }
+function toFilteredArray<T extends object>(
+  processors: T | undefined | null | false | (T | undefined | null | false)[],
+): T[] {
+  return Array.isArray(processors) ? processors.filter(isObject) : processors ? [processors] : []
+}
+
+export { isObject, toFilteredArray }
 export type { UnionOptional }

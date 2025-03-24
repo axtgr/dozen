@@ -1,17 +1,19 @@
 import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
-import { isObject } from './utils.ts'
+import { toFilteredArray } from './utils.ts'
 
-interface WrappedSource {
-  readSync: () => Entry[]
-  readAsync: () => Promise<Entry[]>
+interface WrappedSource<TOptions extends object> {
+  name: string
+  readSync: (options: TOptions) => Entry[]
+  readAsync: (options: TOptions) => Promise<Entry[]>
 }
 
-function wrapSource(source: Source): WrappedSource {
-  return {
+function wrapSource<TOptions extends object>(source: Source<TOptions>): WrappedSource<TOptions> {
+  const wrappedSource: WrappedSource<TOptions> = {
+    name: source.name,
     readSync: source.readSync
-      ? () => {
-          const result = source.readSync()
-          return Array.isArray(result) ? result.filter(isObject) : result ? [result] : []
+      ? (options) => {
+          const result = source.readSync(options)
+          return toFilteredArray(result)
         }
       : () => {
           throw new Error(
@@ -19,15 +21,17 @@ function wrapSource(source: Source): WrappedSource {
           )
         },
     readAsync: source.readAsync
-      ? async () => {
-          const result = await source.readAsync()
-          return Array.isArray(result) ? result.filter(isObject) : result ? [result] : []
+      ? async (options) => {
+          const result = await source.readAsync(options)
+          return toFilteredArray(result)
         }
-      : async () => source.readSync(),
+      : async (options) => wrappedSource.readSync(options),
   }
+  return wrappedSource
 }
 
 interface WrappedLoader<TOptions extends object> {
+  name: string
   canLoadSync: (entry: Entry, options: TOptions) => boolean
   canLoadAsync: (entry: Entry, options: TOptions) => boolean
   loadSync: (entry: Entry, options: TOptions) => Entry[]
@@ -35,12 +39,13 @@ interface WrappedLoader<TOptions extends object> {
 }
 
 function wrapLoader<TOptions extends object>(loader: Loader<TOptions>): WrappedLoader<TOptions> {
-  return {
+  const wrappedLoader: WrappedLoader<TOptions> = {
+    name: loader.name,
     canLoadSync: loader.canLoadSync ?? (() => false),
     loadSync: loader.loadSync
       ? (entry, options) => {
           const result = loader.loadSync(entry, options)
-          return Array.isArray(result) ? result.filter(isObject) : result ? [result] : []
+          return toFilteredArray(result)
         }
       : () => {
           throw new Error(
@@ -51,35 +56,42 @@ function wrapLoader<TOptions extends object>(loader: Loader<TOptions>): WrappedL
     loadAsync: loader.loadAsync
       ? async (entry, options) => {
           const result = await loader.loadAsync(entry, options)
-          return Array.isArray(result) ? result.filter(isObject) : result ? [result] : []
+          return toFilteredArray(result)
         }
-      : async () => {
-          throw new Error(
-            `Loader ${loader.name} doesn't support async loads. Call loadSync instead`,
-          )
-        },
+      : async (entry, options) => wrappedLoader.loadSync(entry, options),
   }
+  return wrappedLoader
 }
 
 interface WrappedMapper<TOptions extends object> {
-  mapSync: (entry: Entry, options: TOptions) => Entry
-  mapAsync: (entry: Entry, options: TOptions) => Promise<Entry>
+  name: string
+  mapSync: (entry: Entry, options: TOptions) => Entry[]
+  mapAsync: (entry: Entry, options: TOptions) => Promise<Entry[]>
 }
 
 function wrapMapper<TOptions extends object>(mapper: Mapper<TOptions>): WrappedMapper<TOptions> {
-  return {
+  const wrappedMapper: WrappedMapper<TOptions> = {
+    name: mapper.name,
     mapSync: mapper.mapSync
-      ? (entry, options) => mapper.mapSync(entry, options)
+      ? (entry, options) => {
+          const result = mapper.mapSync(entry, options)
+          return toFilteredArray(result)
+        }
       : () => {
           throw new Error(`Mapper ${mapper.name} doesn't support sync maps. Call mapAsync instead`)
         },
     mapAsync: mapper.mapAsync
-      ? async (entry, options) => mapper.mapAsync(entry, options)
-      : async (entry, options) => mapper.mapSync(entry, options),
+      ? async (entry, options) => {
+          const result = await mapper.mapAsync(entry, options)
+          return toFilteredArray(result)
+        }
+      : async (entry, options) => wrappedMapper.mapSync(entry, options),
   }
+  return wrappedMapper
 }
 
 interface WrappedReducer<TOptions extends object> {
+  name: string
   reduceSync: (config: object, entry: Entry, options: TOptions) => object
   reduceAsync: (config: object, entry: Entry, options: TOptions) => Promise<object>
 }
@@ -87,7 +99,8 @@ interface WrappedReducer<TOptions extends object> {
 function wrapReducer<TOptions extends object>(
   reducer: Reducer<TOptions>,
 ): WrappedReducer<TOptions> {
-  return {
+  const wrappedReducer: WrappedReducer<TOptions> = {
+    name: reducer.name,
     reduceSync: reducer.reduceSync
       ? (config, entry, options) => reducer.reduceSync(config, entry, options)
       : () => {
@@ -96,12 +109,14 @@ function wrapReducer<TOptions extends object>(
           )
         },
     reduceAsync: reducer.reduceAsync
-      ? async (config, entry, options) => reducer.reduceAsync(config, entry, options)
-      : async (config, entry, options) => reducer.reduceSync(config, entry, options),
+      ? (config, entry, options) => reducer.reduceAsync(config, entry, options)
+      : async (config, entry, options) => wrappedReducer.reduceSync(config, entry, options),
   }
+  return wrappedReducer
 }
 
 interface WrappedTransformer<TOptions extends object> {
+  name: string
   transformSync: (config: object, options: TOptions) => object
   transformAsync: (config: object, options: TOptions) => Promise<object>
 }
@@ -109,7 +124,8 @@ interface WrappedTransformer<TOptions extends object> {
 function wrapTransformer<TOptions extends object>(
   transformer: Transformer<TOptions>,
 ): WrappedTransformer<TOptions> {
-  return {
+  const wrappedTransformer: WrappedTransformer<TOptions> = {
+    name: transformer.name,
     transformSync: transformer.transformSync
       ? (config, options) => transformer.transformSync(config, options)
       : () => {
@@ -118,12 +134,14 @@ function wrapTransformer<TOptions extends object>(
           )
         },
     transformAsync: transformer.transformAsync
-      ? async (config, options) => transformer.transformAsync(config, options)
-      : async (config, options) => transformer.transformSync(config, options),
+      ? (config, options) => transformer.transformAsync(config, options)
+      : async (config, options) => wrappedTransformer.transformSync(config, options),
   }
+  return wrappedTransformer
 }
 
 interface WrappedValidator<TOptions extends object> {
+  name: string
   validateSync: (config: object, options: TOptions) => void
   validateAsync: (config: object, options: TOptions) => Promise<void>
 }
@@ -131,7 +149,8 @@ interface WrappedValidator<TOptions extends object> {
 function wrapValidator<TOptions extends object>(
   validator: Validator<TOptions>,
 ): WrappedValidator<TOptions> {
-  return {
+  const wrappedValidator: WrappedValidator<TOptions> = {
+    name: validator.name,
     validateSync: validator.validateSync
       ? (config, options) => validator.validateSync(config, options)
       : () => {
@@ -140,9 +159,10 @@ function wrapValidator<TOptions extends object>(
           )
         },
     validateAsync: validator.validateAsync
-      ? async (config, options) => validator.validateAsync(config, options)
-      : async (config, options) => validator.validateSync(config, options),
+      ? (config, options) => validator.validateAsync(config, options)
+      : async (config, options) => wrappedValidator.validateSync(config, options),
   }
+  return wrappedValidator
 }
 
 export { wrapSource, wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator }
