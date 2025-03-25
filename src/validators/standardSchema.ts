@@ -72,12 +72,14 @@ declare namespace StandardSchemaV1 {
 }
 
 interface StandardSchemaValidatorOptions {
-  schema: StandardSchemaV1
+  schema?: StandardSchemaV1
 }
 
 const standardSchemaValidator: Validator<StandardSchemaValidatorOptions> = {
   name: 'standardSchema',
   validateSync: (config, { schema }) => {
+    if (!schema) return
+
     const result = schema['~standard'].validate(config)
 
     if (result instanceof Promise)
