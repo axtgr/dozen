@@ -6,7 +6,7 @@ interface Options {
 
 interface Entry {
   id: string
-  parentId: string
+  parentId?: string
   value: unknown
   loaded?: boolean
   tags?: string[]

@@ -3,6 +3,22 @@ import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } f
 import { toFilteredArray } from './utils.ts'
 import { wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator } from './wrappers.ts'
 
+function sourcesToEntries<TOptions extends object>(
+  sources:
+    | Source
+    | Entry
+    | Entry[]
+    | undefined
+    | null
+    | false
+    | (Source | Entry | Entry[] | undefined | null | false)[],
+  options: TOptions,
+) {
+  return toFilteredArray(sources).flatMap((source) => {
+    return typeof source === 'function' ? source(options) : source
+  })
+}
+
 type ExtractOptions<T> = T extends Source<infer O>
   ? O
   : T extends Loader<infer O>
@@ -50,9 +66,6 @@ function dozen<
   TTransformers extends (Transformer | undefined | null | false)[],
   TValidators extends (Validator<any> | undefined | null | false)[],
 >(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
-  const entries = toFilteredArray(options.sources).flatMap((source) => {
-    return typeof source === 'function' ? source(options) : source
-  })
   const loaders = toFilteredArray(options.loaders).map((loader) => wrapLoader(loader))
   const mappers = toFilteredArray(options.mappers).map((mapper) => wrapMapper(mapper))
   const reducer = wrapReducer(options.reducer || assignReducer)
@@ -64,6 +77,8 @@ function dozen<
   )
 
   let config: object | undefined
+  let unprocessedEntries: Entry[] = sourcesToEntries(options.sources, options)
+  const processedEntries: Entry[] = []
 
   const loadEntriesSync = (entries: Entry[]): Entry[] => {
     return entries.flatMap((entry) => {
@@ -72,73 +87,78 @@ function dozen<
       if (!loader) throw new Error(`No loader found that can load entry ${entry.id}`)
       const returnedEntries = loader.loadSync(entry, options)
 
-      const { loaded, unloaded } = returnedEntries.reduce(
-        (result, returnedEntry) => {
-          if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
-            throw new Error(
-              `Loader ${loader.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
-            )
-          }
-          if (returnedEntry.loaded) {
-            result.loaded.push(returnedEntry)
-          } else {
-            result.unloaded.push(returnedEntry)
-          }
-          return result
-        },
-        { loaded: [], unloaded: [] } as { loaded: Entry[]; unloaded: Entry[] },
-      )
+      const allLoaded = returnedEntries.every((returnedEntry) => {
+        if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
+          throw new Error(
+            `Loader ${loader.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
+          )
+        }
+        return returnedEntry.loaded
+      })
 
-      if (unloaded.length) {
-        return [...loaded, ...loadEntriesSync(unloaded)]
-      } else {
-        return loaded
-      }
+      return allLoaded ? returnedEntries : loadEntriesSync(returnedEntries)
     })
   }
 
-  const loadAndMapEntriesSync = (entries: Entry[]): Entry[] => {
+  const processEntriesSync = (entries: Entry[]): Entry[] => {
     return loadEntriesSync(entries).flatMap((entry) => {
-      const { sameEntry, newEntries } = mappers.reduce(
+      const result = mappers.reduce(
         (result, mapper) => {
           const returnedEntries = mapper.mapSync(entry, options)
+          let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
-              result.sameEntry = returnedEntry
+              result.entry = returnedEntry
+              preOrPostArray = result.post
             } else {
-              result.newEntries.push(returnedEntry)
+              preOrPostArray.push(returnedEntry)
             }
           })
           return result
         },
-        { sameEntry: entry, newEntries: [] } as { sameEntry: Entry; newEntries: Entry[] },
+        { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
       )
-      return [sameEntry, ...loadAndMapEntriesSync(newEntries)]
+      return [
+        ...(result.pre.length ? processEntriesSync(result.pre) : []),
+        result.entry,
+        ...(result.post.length ? processEntriesSync(result.post) : []),
+      ]
     })
+  }
+
+  const ensureAllEntriesAreProcessedSync = () => {
+    if (!unprocessedEntries.length) return false
+    const entriesToProcess = unprocessedEntries
+    unprocessedEntries = []
+    const newEntries = processEntriesSync(entriesToProcess)
+    processedEntries.push(...newEntries)
+    ensureAllEntriesAreProcessedSync()
+    return true
+  }
+
+  const ensureConfigIsReadySync = () => {
+    if (ensureAllEntriesAreProcessedSync()) {
+      config = processedEntries.reduce((config, entry) => {
+        return reducer.reduceSync(config, entry, options)
+      }, Object.create(null))
+      config = transformers.reduce((config, transformer) => {
+        return transformer.transformSync(config!, options)
+      }, config)
+      validators.forEach((validator) => {
+        validator.validateSync(config!, options)
+      })
+    }
   }
 
   return {
     get() {
-      if (!config) {
-        const processedEntries = loadAndMapEntriesSync(entries)
-        config = processedEntries.reduce((config, entry) => {
-          return reducer.reduceSync(config, entry, options)
-        }, Object.create(null))
-        config = transformers.reduce((config, transformer) => {
-          return transformer.transformSync(config!, options)
-        }, config)
-        validators.forEach((validator) => {
-          validator.validateSync(config!, options)
-        })
-      }
+      ensureConfigIsReadySync()
       return config
     },
+
     add(items: Source | Source[] | Entry | Entry[]) {
-      const itemsArray = Array.isArray(items) ? items.flat() : [items]
-      const newEntries = itemsArray.flatMap((item) => {
-        return typeof item === 'function' ? item(options) : item
-      })
-      entries.push(...newEntries)
+      const newEntries = sourcesToEntries(items, options)
+      unprocessedEntries.push(...newEntries)
       return this
     },
   }

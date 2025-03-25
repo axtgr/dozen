@@ -24,13 +24,9 @@ function isObjectOrFunction<T extends object>(value: T | null | undefined | fals
 }
 
 function toFilteredArray<T extends object>(
-  processors: T | undefined | null | false | (T | undefined | null | false)[],
+  values: T | undefined | null | false | (T | undefined | null | false)[],
 ): T[] {
-  return Array.isArray(processors)
-    ? processors.filter(isObjectOrFunction)
-    : processors
-      ? [processors]
-      : []
+  return Array.isArray(values) ? values.filter(isObjectOrFunction) : values ? [values] : []
 }
 
 export { isObjectOrFunction as isObject, toFilteredArray }

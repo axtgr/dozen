@@ -4,7 +4,6 @@ function env(): Source {
   return () => [
     {
       id: 'process.env',
-      parentId: 'process.env',
       tags: ['env'],
       loaded: true,
       value: process.env,
