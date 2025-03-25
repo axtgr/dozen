@@ -1,7 +1,14 @@
 import assignReducer from './reducers/assign.ts'
 import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-import { wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator } from './wrappers.ts'
+import {
+  type WrappedLoader,
+  wrapLoader,
+  wrapMapper,
+  wrapReducer,
+  wrapTransformer,
+  wrapValidator,
+} from './wrappers.ts'
 
 function sourcesToEntries<TOptions extends object>(
   sources:
@@ -100,6 +107,33 @@ function dozen<
     })
   }
 
+  const loadEntriesAsync = async (entries: Entry[]): Promise<Entry[]> => {
+    const promises = entries.map(async (entry) => {
+      if (entry.loaded) return entry
+
+      const canLoadersLoadPromises = loaders.map((l) => l.canLoadAsync(entry, options))
+      const canLoadersLoad = await Promise.all(canLoadersLoadPromises)
+      const loaderIndex = canLoadersLoad.findIndex(Boolean)
+      const loader = loaderIndex > -1 ? loaders[loaderIndex] : undefined
+      if (!loader) throw new Error(`No loader found that can load entry ${entry.id}`)
+
+      const returnedEntries = await loader.loadAsync(entry, options)
+
+      const allLoaded = returnedEntries.every((returnedEntry) => {
+        if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
+          throw new Error(
+            `Loader ${loader.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
+          )
+        }
+        return returnedEntry.loaded
+      })
+
+      return allLoaded ? returnedEntries : loadEntriesAsync(returnedEntries)
+    })
+    const loadedEntries = await Promise.all(promises)
+    return loadedEntries.flat()
+  }
+
   const processEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
     return loadEntriesSync(entries).flatMap((entry) => {
       if (processedIds.includes(entry.id)) return []
@@ -128,6 +162,45 @@ function dozen<
     })
   }
 
+  const processEntriesAsync = async (
+    entries: Entry[],
+    processedIds: string[] = [],
+  ): Promise<Entry[]> => {
+    const loadedEntries = await loadEntriesAsync(entries)
+    const promises = loadedEntries.map(async (entry) => {
+      if (processedIds.includes(entry.id)) return []
+      const result = await mappers.reduce(
+        async (resultPromise, mapper) => {
+          const result = await resultPromise
+          const returnedEntries = await mapper.mapAsync(entry, options)
+          let preOrPostArray = result.pre
+          returnedEntries.forEach((returnedEntry) => {
+            if (returnedEntry.id === entry.id) {
+              result.entry = returnedEntry
+              preOrPostArray = result.post
+            } else {
+              preOrPostArray.push(returnedEntry)
+            }
+          })
+          return result
+        },
+        Promise.resolve({ pre: [], entry, post: [] } as {
+          pre: Entry[]
+          entry: Entry
+          post: Entry[]
+        }),
+      )
+      processedIds.push(result.entry.id)
+      return [
+        ...(result.pre.length ? await processEntriesAsync(result.pre, processedIds) : []),
+        result.entry,
+        ...(result.post.length ? await processEntriesAsync(result.post, processedIds) : []),
+      ]
+    })
+    const processedEntries = await Promise.all(promises)
+    return processedEntries.flat()
+  }
+
   const ensureAllEntriesAreProcessedSync = () => {
     if (!unprocessedEntries.length) return false
     const entriesToProcess = unprocessedEntries
@@ -135,6 +208,16 @@ function dozen<
     const newEntries = processEntriesSync(entriesToProcess)
     processedEntries.push(...newEntries)
     ensureAllEntriesAreProcessedSync()
+    return true
+  }
+
+  const ensureAllEntriesAreProcessedAsync = async () => {
+    if (!unprocessedEntries.length) return false
+    const entriesToProcess = unprocessedEntries
+    unprocessedEntries = []
+    const newEntries = await processEntriesAsync(entriesToProcess)
+    processedEntries.push(...newEntries)
+    await ensureAllEntriesAreProcessedAsync()
     return true
   }
 
@@ -152,9 +235,35 @@ function dozen<
     }
   }
 
+  const ensureConfigIsReadyAsync = async () => {
+    if (await ensureAllEntriesAreProcessedAsync()) {
+      let configPromise = processedEntries.reduce(
+        (configPromise, entry) => {
+          return configPromise.then((config) => reducer.reduceAsync(config, entry, options))
+        },
+        Promise.resolve(Object.create(null)),
+      )
+      configPromise = transformers.reduce((configPromise, transformer) => {
+        return configPromise.then((config) => transformer.transformAsync(config!, options))
+      }, configPromise)
+      const _config = await configPromise
+      await Promise.all(
+        validators.map((validator) => {
+          return validator.validateAsync(_config, options)
+        }),
+      )
+      config = _config
+    }
+  }
+
   return {
     get() {
       ensureConfigIsReadySync()
+      return config
+    },
+
+    async getAsync() {
+      await ensureConfigIsReadyAsync()
       return config
     },
 
