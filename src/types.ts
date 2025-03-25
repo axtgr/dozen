@@ -6,25 +6,13 @@ interface Options {
 
 interface Entry {
   id: string
-  rootId: string
-  source: Source
+  parentId: string
   value: unknown
   loaded?: boolean
   tags?: string[]
 }
 
-type Source<TOptions extends object = object> = { name: string } & UnionOptional<
-  | {
-      readSync: (
-        options: TOptions,
-      ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
-    }
-  | {
-      readAsync: (
-        options: TOptions,
-      ) => Promise<undefined | null | false | Entry | (undefined | null | false | Entry)[]>
-    }
->
+type Source<TOptions extends object = object> = (options: TOptions) => Entry[]
 
 type Loader<TOptions extends object = object> = { name: string } & UnionOptional<
   | {

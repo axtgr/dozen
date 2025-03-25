@@ -19,15 +19,19 @@ type UnionOptionalInner<
  */
 type UnionOptional<BaseType extends object> = UnionOptionalInner<BaseType>
 
-function isObject<T extends object>(value: T | null | undefined | false): value is T {
-  return typeof value === 'object' && value !== null
+function isObjectOrFunction<T extends object>(value: T | null | undefined | false): value is T {
+  return typeof value === 'function' || (typeof value === 'object' && value !== null)
 }
 
 function toFilteredArray<T extends object>(
   processors: T | undefined | null | false | (T | undefined | null | false)[],
 ): T[] {
-  return Array.isArray(processors) ? processors.filter(isObject) : processors ? [processors] : []
+  return Array.isArray(processors)
+    ? processors.filter(isObjectOrFunction)
+    : processors
+      ? [processors]
+      : []
 }
 
-export { isObject, toFilteredArray }
+export { isObjectOrFunction as isObject, toFilteredArray }
 export type { UnionOptional }

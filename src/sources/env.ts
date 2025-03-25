@@ -1,19 +1,15 @@
 import type { Source } from '../types.ts'
 
 function env(): Source {
-  return {
-    name: 'env',
-    readSync() {
-      return [
-        {
-          source: this,
-          id: 'process.env',
-          tags: ['env'],
-          value: process.env,
-        },
-      ]
+  return () => [
+    {
+      id: 'process.env',
+      parentId: 'process.env',
+      tags: ['env'],
+      loaded: true,
+      value: process.env,
     },
-  }
+  ]
 }
 
 export default env

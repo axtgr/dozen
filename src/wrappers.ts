@@ -1,34 +1,5 @@
-import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
+import type { Entry, Loader, Mapper, Reducer, Transformer, Validator } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-
-interface WrappedSource<TOptions extends object> {
-  name: string
-  readSync: (options: TOptions) => Entry[]
-  readAsync: (options: TOptions) => Promise<Entry[]>
-}
-
-function wrapSource<TOptions extends object>(source: Source<TOptions>): WrappedSource<TOptions> {
-  const wrappedSource: WrappedSource<TOptions> = {
-    name: source.name,
-    readSync: source.readSync
-      ? (options) => {
-          const result = source.readSync(options)
-          return toFilteredArray(result)
-        }
-      : () => {
-          throw new Error(
-            `Source ${source.name} doesn't support sync reads. Call readAsync instead or remove the source`,
-          )
-        },
-    readAsync: source.readAsync
-      ? async (options) => {
-          const result = await source.readAsync(options)
-          return toFilteredArray(result)
-        }
-      : async (options) => wrappedSource.readSync(options),
-  }
-  return wrappedSource
-}
 
 interface WrappedLoader<TOptions extends object> {
   name: string
@@ -165,12 +136,5 @@ function wrapValidator<TOptions extends object>(
   return wrappedValidator
 }
 
-export { wrapSource, wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator }
-export type {
-  WrappedSource,
-  WrappedLoader,
-  WrappedMapper,
-  WrappedReducer,
-  WrappedTransformer,
-  WrappedValidator,
-}
+export { wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator }
+export type { WrappedLoader, WrappedMapper, WrappedReducer, WrappedTransformer, WrappedValidator }

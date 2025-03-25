@@ -1,15 +1,7 @@
 import assignReducer from './reducers/assign.ts'
 import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-import {
-  type WrappedSource,
-  wrapLoader,
-  wrapMapper,
-  wrapReducer,
-  wrapSource,
-  wrapTransformer,
-  wrapValidator,
-} from './wrappers.ts'
+import { wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator } from './wrappers.ts'
 
 type ExtractOptions<T> = T extends Source<infer O>
   ? O
@@ -30,7 +22,7 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
   : never
 
 type DozenOptions<
-  TSources extends (Source | undefined | null | false)[],
+  TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TLoaders extends (Loader | undefined | null | false)[],
   TMappers extends (Mapper | undefined | null | false)[],
   TReducer extends Reducer | undefined | null | false,
@@ -43,21 +35,24 @@ type DozenOptions<
   reducer?: TReducer
   transformers?: Transformers
   validators?: TValidators
-} & UnionToIntersection<ExtractOptions<TLoaders[number]>> &
+} & UnionToIntersection<ExtractOptions<TSources[number]>> &
+  UnionToIntersection<ExtractOptions<TLoaders[number]>> &
   UnionToIntersection<ExtractOptions<TMappers[number]>> &
   ExtractOptions<TReducer> &
   UnionToIntersection<ExtractOptions<Transformers[number]>> &
   UnionToIntersection<ExtractOptions<TValidators[number]>>
 
 function dozen<
-  TSources extends (Source | undefined | null | false)[],
+  TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TLoaders extends (Loader | undefined | null | false)[],
   TMappers extends (Mapper | undefined | null | false)[],
   TReducer extends Reducer | undefined | null | false,
   TTransformers extends (Transformer | undefined | null | false)[],
   TValidators extends (Validator<any> | undefined | null | false)[],
 >(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
-  const sources = toFilteredArray(options.sources).map((source) => wrapSource(source))
+  const entries = toFilteredArray(options.sources).flatMap((source) => {
+    return typeof source === 'function' ? source(options) : source
+  })
   const loaders = toFilteredArray(options.loaders).map((loader) => wrapLoader(loader))
   const mappers = toFilteredArray(options.mappers).map((mapper) => wrapMapper(mapper))
   const reducer = wrapReducer(options.reducer || assignReducer)
@@ -68,50 +63,65 @@ function dozen<
     wrapValidator(validator),
   )
 
-  const entriesBySource = new Map<WrappedSource, Map<string, Entry[]>>()
-  let sourcesToRead = sources
   let config: object | undefined
 
-  const addWrappedSource = (wrappedSource: WrappedSource) => {
-    entriesBySource.set(wrappedSource, new Map<string, Entry[]>())
-    sources.push(wrappedSource)
-    sourcesToRead.push(wrappedSource)
+  const loadEntriesSync = (entries: Entry[]): Entry[] => {
+    return entries.flatMap((entry) => {
+      if (entry.loaded) return entry
+      const loader = loaders.find((l) => l.canLoadSync(entry, options))
+      if (!loader) throw new Error(`No loader found that can load entry ${entry.id}`)
+      const returnedEntries = loader.loadSync(entry, options)
+
+      const { loaded, unloaded } = returnedEntries.reduce(
+        (result, returnedEntry) => {
+          if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
+            throw new Error(
+              `Loader ${loader.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
+            )
+          }
+          if (returnedEntry.loaded) {
+            result.loaded.push(returnedEntry)
+          } else {
+            result.unloaded.push(returnedEntry)
+          }
+          return result
+        },
+        { loaded: [], unloaded: [] } as { loaded: Entry[]; unloaded: Entry[] },
+      )
+
+      if (unloaded.length) {
+        return [...loaded, ...loadEntriesSync(unloaded)]
+      } else {
+        return loaded
+      }
+    })
   }
 
-  sources.forEach(addWrappedSource)
-
-  const readSourcesSync = () => {
-    sourcesToRead.forEach((source) => {
-      const entriesById = source
-        .readSync(options)
-        .flatMap((entry) => {
-          const loader = loaders.find((l) => l.canLoadSync(entry, options))
-          return loader ? loader.loadSync(entry, options) : [entry]
-        })
-        .reduce((entriesById, entry) => {
-          entry = mappers.reduce((entry, mapper) => {
-            return mapper.mapSync(entry, options)
-          }, entry as Entry)
-          const entriesWithSameId = entriesById.get(entry.id) || []
-          entriesById.set(entry.id, [...entriesWithSameId, entry])
-          return entriesById
-        }, new Map<string, Entry[]>())
-      entriesBySource.set(source, entriesById)
+  const loadAndMapEntriesSync = (entries: Entry[]): Entry[] => {
+    return loadEntriesSync(entries).flatMap((entry) => {
+      const { sameEntry, newEntries } = mappers.reduce(
+        (result, mapper) => {
+          const returnedEntries = mapper.mapSync(entry, options)
+          returnedEntries.forEach((returnedEntry) => {
+            if (returnedEntry.id === entry.id) {
+              result.sameEntry = returnedEntry
+            } else {
+              result.newEntries.push(returnedEntry)
+            }
+          })
+          return result
+        },
+        { sameEntry: entry, newEntries: [] } as { sameEntry: Entry; newEntries: Entry[] },
+      )
+      return [sameEntry, ...loadAndMapEntriesSync(newEntries)]
     })
-    sourcesToRead = []
   }
 
   return {
     get() {
-      if (sourcesToRead.length) {
-        readSourcesSync()
-        const entries = entriesBySource
-          .values()
-          .flatMap((entriesById) => entriesById.values())
-          .toArray()
-          .flat()
-          .filter((entry) => typeof entry.value === 'object' && entry.value !== null)
-        config = entries.reduce((config, entry) => {
+      if (!config) {
+        const processedEntries = loadAndMapEntriesSync(entries)
+        config = processedEntries.reduce((config, entry) => {
           return reducer.reduceSync(config, entry, options)
         }, Object.create(null))
         config = transformers.reduce((config, transformer) => {
@@ -123,9 +133,12 @@ function dozen<
       }
       return config
     },
-    add(source: Source) {
-      const wrappedSource = wrapSource(source)
-      addWrappedSource(wrappedSource)
+    add(items: Source | Source[] | Entry | Entry[]) {
+      const itemsArray = Array.isArray(items) ? items.flat() : [items]
+      const newEntries = itemsArray.flatMap((item) => {
+        return typeof item === 'function' ? item(options) : item
+      })
+      entries.push(...newEntries)
       return this
     },
   }
