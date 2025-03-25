@@ -100,8 +100,9 @@ function dozen<
     })
   }
 
-  const processEntriesSync = (entries: Entry[]): Entry[] => {
+  const processEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
     return loadEntriesSync(entries).flatMap((entry) => {
+      if (processedIds.includes(entry.id)) return []
       const result = mappers.reduce(
         (result, mapper) => {
           const returnedEntries = mapper.mapSync(entry, options)
@@ -118,10 +119,11 @@ function dozen<
         },
         { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
       )
+      processedIds.push(result.entry.id)
       return [
-        ...(result.pre.length ? processEntriesSync(result.pre) : []),
+        ...(result.pre.length ? processEntriesSync(result.pre, processedIds) : []),
         result.entry,
-        ...(result.post.length ? processEntriesSync(result.post) : []),
+        ...(result.post.length ? processEntriesSync(result.post, processedIds) : []),
       ]
     })
   }
