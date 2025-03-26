@@ -1,11 +1,7 @@
 import dotenv from 'dotenv'
 import type { Loader } from '../types.ts'
 
-interface DotenvLoaderOptions {
-  name?: string
-}
-
-const dotenvLoader: Loader<DotenvLoaderOptions> = {
+const dotenvLoader: Loader = {
   name: 'dotenv',
   canLoadSync: (entry) => {
     return Boolean(entry.tags?.includes('file') && entry.tags.includes('env'))
@@ -15,7 +11,7 @@ const dotenvLoader: Loader<DotenvLoaderOptions> = {
       path: entry.value as string | string[],
       processEnv: {},
     })
-    if (error) {
+    if (error && (error as any).code !== 'ENOENT') {
       throw error
     }
     return [
