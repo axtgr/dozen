@@ -23,7 +23,7 @@ type Loader<TOptions extends object = object> = { name: string } & UnionOptional
       ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
     }
   | {
-      canLoadAsync: (entry: Entry, options: TOptions) => boolean
+      canLoadAsync: (entry: Entry, options: TOptions) => Promise<boolean>
       loadAsync: (
         entry: Entry,
         options: TOptions,
