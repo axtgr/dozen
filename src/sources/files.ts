@@ -12,6 +12,10 @@ function files(): Source<FilesSourceOptions> {
         id: 'files',
         tags: ['file'],
         value: [
+          '.env',
+          `.env.${process.env.NODE_ENV || 'development'}`,
+          '.env.local',
+          `.env.${process.env.NODE_ENV || 'development'}.local`,
           ...(name
             ? [
                 'package.json',
