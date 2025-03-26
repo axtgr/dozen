@@ -86,6 +86,7 @@ function dozen<
   let config: object | undefined
   let unprocessedEntries: Entry[] = sourcesToEntries(options.sources, options)
   const processedEntries: Entry[] = []
+  let processingPromise = Promise.resolve()
 
   const loadEntriesSync = (entries: Entry[]): Entry[] => {
     return entries.flatMap((entry) => {
@@ -263,7 +264,8 @@ function dozen<
     },
 
     async getAsync() {
-      await ensureConfigIsReadyAsync()
+      processingPromise = processingPromise.then(() => ensureConfigIsReadyAsync())
+      await processingPromise
       return config
     },
 
