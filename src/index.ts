@@ -1,14 +1,7 @@
 import assignReducer from './reducers/assign.ts'
 import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-import {
-  type WrappedLoader,
-  wrapLoader,
-  wrapMapper,
-  wrapReducer,
-  wrapTransformer,
-  wrapValidator,
-} from './wrappers.ts'
+import { wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator } from './wrappers.ts'
 
 function sourcesToEntries<TOptions extends object>(
   sources:
@@ -278,3 +271,4 @@ function dozen<
 }
 
 export default dozen
+export type { DozenOptions }
