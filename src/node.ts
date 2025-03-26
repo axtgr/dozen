@@ -1,8 +1,10 @@
-import cosmiconfig from '../src/loaders/cosmiconfig.ts'
-import dotenv from '../src/loaders/dotenv.ts'
+import argvLoader from '../src/loaders/argv.ts'
+import cosmiconfigLoader from '../src/loaders/cosmiconfig.ts'
+import dotenvLoader from '../src/loaders/dotenv.ts'
 import removePrefix from '../src/mappers/removePrefix.ts'
+import argv from '../src/sources/argv.ts'
 import configFile from '../src/sources/configFile.ts'
-import dotenvSource from '../src/sources/dotenv.ts'
+import dotenv from '../src/sources/dotenv.ts'
 import env from '../src/sources/env.ts'
 import standardSchema from '../src/validators/standardSchema.ts'
 import dozen, { type DozenOptions } from './index.ts'
@@ -17,8 +19,8 @@ function dozenForNode<
   TValidators extends (Validator<any> | undefined | null | false)[],
 >(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
   return dozen({
-    sources: [configFile(), dotenvSource(), env()],
-    loaders: [cosmiconfig, dotenv],
+    sources: [configFile(), dotenv(), env(), argv()],
+    loaders: [cosmiconfigLoader, dotenvLoader, argvLoader],
     mappers: [removePrefix],
     transformers: [],
     validators: [standardSchema],
@@ -26,5 +28,10 @@ function dozenForNode<
     ...options,
   })
 }
+
+dozenForNode.configFile = configFile
+dozenForNode.env = env
+dozenForNode.dotenv = dotenv
+dozenForNode.argv = argv
 
 export default dozenForNode
