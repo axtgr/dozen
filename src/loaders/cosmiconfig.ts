@@ -12,7 +12,14 @@ const cosmiconfigLoader: Loader<CosmiconfigLoaderOptions> = {
   },
   loadSync: (entry, options) => {
     const searchPlaces = Array.isArray(entry.value) ? entry.value : [entry.value]
-    const explorer = cosmiconfigSync(options.name || '', { searchPlaces })
+    const explorer = cosmiconfigSync(options.name || '', {
+      searchPlaces,
+      // .mjs files can only be loaded via an async import, and cosmiconfig has no sync
+      // loader for them, so we just ignore them here.
+      loaders: {
+        '.mjs': () => null,
+      },
+    })
     const result = explorer.search()
     return [
       {
