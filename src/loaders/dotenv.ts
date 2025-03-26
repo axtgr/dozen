@@ -1,6 +1,8 @@
 import dotenv from 'dotenv'
 import type { Loader } from '../types.ts'
 
+type DotenvLoaderOptions = object
+
 const dotenvLoader: Loader = {
   name: 'dotenv',
   canLoadSync: (entry) => {
@@ -25,3 +27,4 @@ const dotenvLoader: Loader = {
 }
 
 export default dotenvLoader
+export type { DotenvLoaderOptions }

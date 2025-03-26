@@ -15,3 +15,4 @@ function argv(options?: ArgvSourceOptions): Source {
 }
 
 export default argv
+export type { ArgvSourceOptions }

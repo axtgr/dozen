@@ -17,3 +17,4 @@ function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceO
 }
 
 export default configFile
+export type { ConfigFileSourceOptions }

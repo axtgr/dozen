@@ -1,5 +1,7 @@
 import type { Source } from '../types.ts'
 
+type EnvSourceOptions = object
+
 function env(): Source {
   return () => [
     {
@@ -12,3 +14,4 @@ function env(): Source {
 }
 
 export default env
+export type { EnvSourceOptions }

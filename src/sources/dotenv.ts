@@ -1,5 +1,7 @@
 import type { Source } from '../types.ts'
 
+type DotenvSourceOptions = object
+
 function dotenv(): Source {
   return () => {
     return [
@@ -18,3 +20,4 @@ function dotenv(): Source {
 }
 
 export default dotenv
+export type { DotenvSourceOptions }

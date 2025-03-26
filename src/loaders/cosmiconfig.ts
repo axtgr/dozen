@@ -41,3 +41,4 @@ const cosmiconfigLoader: Loader<CosmiconfigLoaderOptions> = {
 }
 
 export default cosmiconfigLoader
+export type { CosmiconfigLoaderOptions }

@@ -1,6 +1,8 @@
 import { parseArgs } from 'node:util'
 import type { Loader } from '../types.ts'
 
+type ArgvLoaderOptions = object
+
 const argvLoader: Loader = {
   name: 'argv',
   canLoadSync: (entry) => {
@@ -23,3 +25,4 @@ const argvLoader: Loader = {
 }
 
 export default argvLoader
+export type { ArgvLoaderOptions }
