@@ -24,7 +24,7 @@
     "node": ">=23.6.0"
   },
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./src/presets/node.ts",
   "files": ["src"],
   "exports": {
     ".": "./src/presets/node.ts",
