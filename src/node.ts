@@ -6,6 +6,9 @@ import configFile, { type ConfigFileSourceOptions } from '../src/sources/configF
 import dotenv, { type DotenvSourceOptions } from '../src/sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../src/sources/env.ts'
 import keyCaseTransformer, { type KeyCaseTransformerOptions } from '../src/transformers/keyCase.ts'
+import parseSchemaTransformer, {
+  type ParseSchemaTransformerOptions,
+} from '../src/transformers/parseSchema.ts'
 import standardSchema, {
   type StandardSchemaValidatorOptions,
 } from '../src/validators/standardSchema.ts'
@@ -32,7 +35,7 @@ function dozenForNode<
       [Loader<CosmiconfigLoaderOptions>, Loader<DotenvLoaderOptions>, Loader<ArgvLoaderOptions>],
       [Mapper<PrefixMapperOptions>],
       Reducer,
-      [Transformer<KeyCaseTransformerOptions>],
+      [Transformer<KeyCaseTransformerOptions>, Transformer<ParseSchemaTransformerOptions>],
       [Validator<StandardSchemaValidatorOptions>]
     >,
     'sources' | 'loaders' | 'mappers' | 'reducers' | 'transformers' | 'validators'
@@ -56,7 +59,7 @@ function dozenForNode<
     sources: [configFile(), dotenv(), env(), argv()],
     loaders: [cosmiconfigLoader, dotenvLoader, argvLoader],
     mappers: [prefix],
-    transformers: [keyCaseTransformer],
+    transformers: [keyCaseTransformer, parseSchemaTransformer],
     validators: [standardSchema],
     prefix: name
       ? {
