@@ -1,7 +1,5 @@
-import assignReducer from './reducers/assign.ts'
-import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
+import type { Entry, Plugin, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-import { wrapLoader, wrapMapper, wrapReducer, wrapTransformer, wrapValidator } from './wrappers.ts'
 
 function sourcesToEntries<TOptions extends object>(
   sources:
@@ -19,19 +17,7 @@ function sourcesToEntries<TOptions extends object>(
   })
 }
 
-type ExtractOptions<T> = T extends Source<infer O>
-  ? O
-  : T extends Loader<infer O>
-    ? O
-    : T extends Mapper<infer O>
-      ? O
-      : T extends Reducer<infer O>
-        ? O
-        : T extends Transformer<infer O>
-          ? O
-          : T extends Validator<infer O>
-            ? O
-            : never
+type ExtractOptions<T> = T extends Source<infer O> ? O : T extends Plugin<infer O> ? O : never
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
@@ -39,42 +25,18 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 type DozenOptions<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
-  TLoaders extends (Loader | undefined | null | false)[],
-  TMappers extends (Mapper | undefined | null | false)[],
-  TReducer extends Reducer | undefined | null | false,
-  Transformers extends (Transformer | undefined | null | false)[],
-  TValidators extends (Validator | undefined | null | false)[],
+  TPlugins extends (Plugin | undefined | null | false)[],
 > = {
   sources?: TSources
-  loaders?: TLoaders
-  mappers?: TMappers
-  reducer?: TReducer
-  transformers?: Transformers
-  validators?: TValidators
+  plugins?: TPlugins
 } & UnionToIntersection<ExtractOptions<TSources[number]>> &
-  UnionToIntersection<ExtractOptions<TLoaders[number]>> &
-  UnionToIntersection<ExtractOptions<TMappers[number]>> &
-  ExtractOptions<TReducer> &
-  UnionToIntersection<ExtractOptions<Transformers[number]>> &
-  UnionToIntersection<ExtractOptions<TValidators[number]>>
+  UnionToIntersection<ExtractOptions<TPlugins[number]>>
 
 function dozen<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
-  TLoaders extends (Loader | undefined | null | false)[],
-  TMappers extends (Mapper | undefined | null | false)[],
-  TReducer extends Reducer | undefined | null | false,
-  TTransformers extends (Transformer | undefined | null | false)[],
-  TValidators extends (Validator<any> | undefined | null | false)[],
->(options: DozenOptions<TSources, TLoaders, TMappers, TReducer, TTransformers, TValidators>) {
-  const loaders = toFilteredArray(options.loaders).map((loader) => wrapLoader(loader))
-  const mappers = toFilteredArray(options.mappers).map((mapper) => wrapMapper(mapper))
-  const reducer = wrapReducer(options.reducer || assignReducer)
-  const transformers = toFilteredArray(options.transformers).map((transformer) =>
-    wrapTransformer(transformer),
-  )
-  const validators = toFilteredArray(options.validators).map((validator) =>
-    wrapValidator(validator),
-  )
+  TPlugins extends (Plugin | undefined | null | false)[],
+>(options: DozenOptions<TSources, TPlugins>) {
+  const plugins = toFilteredArray(options.plugins)
 
   let config: object | undefined
   let unprocessedEntries: Entry[] = sourcesToEntries(options.sources, options)
@@ -84,19 +46,17 @@ function dozen<
   const loadEntriesSync = (entries: Entry[]): Entry[] => {
     return entries.flatMap((entry) => {
       if (entry.loaded) return entry
-      const loader = loaders.find((l) => l.canLoadSync(entry, options))
-      if (!loader) throw new Error(`No loader found that can load entry ${entry.id}`)
-      const returnedEntries = loader.loadSync(entry, options)
-
+      const plugin = plugins.find((p) => p.canLoadSync?.(entry, options) && p.loadSync)
+      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id}`)
+      const returnedEntries = toFilteredArray(plugin.loadSync?.(entry, options))
       const allLoaded = returnedEntries.every((returnedEntry) => {
         if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
           throw new Error(
-            `Loader ${loader.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
+            `Plugin ${plugin.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
           )
         }
         return returnedEntry.loaded
       })
-
       return allLoaded ? returnedEntries : loadEntriesSync(returnedEntries)
     })
   }
@@ -105,18 +65,21 @@ function dozen<
     const promises = entries.map(async (entry) => {
       if (entry.loaded) return entry
 
-      const canLoadersLoadPromises = loaders.map((l) => l.canLoadAsync(entry, options))
-      const canLoadersLoad = await Promise.all(canLoadersLoadPromises)
-      const loaderIndex = canLoadersLoad.findIndex(Boolean)
-      const loader = loaderIndex > -1 ? loaders[loaderIndex] : undefined
-      if (!loader) throw new Error(`No loader found that can load entry ${entry.id}`)
+      const canPluginsLoadPromises = plugins.map(
+        (p) => p.loadAsync && p.canLoadAsync?.(entry, options),
+      )
+      const canPluginsLoad = await Promise.all(canPluginsLoadPromises)
+      const pluginIndex = canPluginsLoad.findIndex(Boolean)
+      const plugin = pluginIndex > -1 ? plugins[pluginIndex] : undefined
+      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id}`)
 
-      const returnedEntries = await loader.loadAsync(entry, options)
+      const returnedEntries = toFilteredArray(await plugin.loadAsync?.(entry, options))
 
       const allLoaded = returnedEntries.every((returnedEntry) => {
+        // TODO: remove/revamp
         if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
           throw new Error(
-            `Loader ${loader.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
+            `Plugin ${plugin.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
           )
         }
         return returnedEntry.loaded
@@ -131,9 +94,10 @@ function dozen<
   const processEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
     return loadEntriesSync(entries).flatMap((entry) => {
       if (processedIds.includes(entry.id)) return []
-      const result = mappers.reduce(
-        (result, mapper) => {
-          const returnedEntries = mapper.mapSync(entry, options)
+      const result = plugins.reduce(
+        (result, plugin) => {
+          if (!plugin.mapSync) return result
+          const returnedEntries = toFilteredArray(plugin.mapSync(entry, options))
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
@@ -163,10 +127,11 @@ function dozen<
     const loadedEntries = await loadEntriesAsync(entries)
     const promises = loadedEntries.map(async (entry) => {
       if (processedIds.includes(entry.id)) return []
-      const result = await mappers.reduce(
-        async (resultPromise, mapper) => {
+      const result = await plugins.reduce(
+        async (resultPromise, plugin) => {
+          if (!plugin.mapAsync) return resultPromise
           const result = await resultPromise
-          const returnedEntries = await mapper.mapAsync(entry, options)
+          const returnedEntries = toFilteredArray(await plugin.mapAsync(entry, options))
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
@@ -217,35 +182,49 @@ function dozen<
 
   const ensureConfigIsReadySync = () => {
     if (ensureAllEntriesAreProcessedSync()) {
-      config = processedEntries.reduce((config, entry) => {
-        return reducer.reduceSync(config, entry, options)
-      }, Object.create(null))
-      config = transformers.reduce((config, transformer) => {
-        return transformer.transformSync(config!, options)
+      config = Object.create(null)
+
+      const reducer = plugins.find((p) => p.reduceSync)
+      if (reducer) {
+        config = processedEntries.reduce((result, entry) => {
+          return reducer?.reduceSync!(result, entry, options) || result
+        }, config!)
+      }
+
+      config = plugins.reduce((result, plugin) => {
+        return plugin.transformSync?.(result!, options) || result
       }, config)
-      validators.forEach((validator) => {
-        validator.validateSync(config!, options)
+
+      plugins.forEach((plugin) => {
+        plugin.validateSync?.(config!, options)
       })
     }
   }
 
   const ensureConfigIsReadyAsync = async () => {
     if (await ensureAllEntriesAreProcessedAsync()) {
-      let configPromise = processedEntries.reduce(
-        (configPromise, entry) => {
-          return configPromise.then((config) => reducer.reduceAsync(config, entry, options))
-        },
-        Promise.resolve(Object.create(null)),
-      )
-      configPromise = transformers.reduce((configPromise, transformer) => {
-        return configPromise.then((config) => transformer.transformAsync(config!, options))
+      let configPromise = Promise.resolve(Object.create(null))
+
+      const reducer = plugins.find((p) => p.reduceAsync)
+      if (reducer) {
+        configPromise = processedEntries.reduce((configPromise, entry) => {
+          return configPromise.then((config) => reducer.reduceAsync!(config, entry, options))
+        }, configPromise)
+      }
+
+      configPromise = plugins.reduce((configPromise, plugin) => {
+        if (!plugin.transformAsync) return configPromise
+        return configPromise.then((config) => plugin.transformAsync!(config!, options))
       }, configPromise)
+
       const _config = await configPromise
+
       await Promise.all(
-        validators.map((validator) => {
-          return validator.validateAsync(_config, options)
+        plugins.map((plugin) => {
+          return plugin.validateAsync?.(_config, options)
         }),
       )
+
       config = _config
     }
   }
@@ -271,4 +250,4 @@ function dozen<
 }
 
 export default dozen
-export type { DozenOptions }
+export type { UnionToIntersection, ExtractOptions, DozenOptions }

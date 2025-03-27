@@ -1,4 +1,4 @@
-import type { Validator } from '../types.ts'
+import type { Plugin } from '../types.ts'
 
 // https://standardschema.dev/
 
@@ -71,12 +71,12 @@ declare namespace StandardSchemaV1 {
   >['output']
 }
 
-interface StandardSchemaValidatorOptions {
+interface StandardSchemaValidatorPluginOptions {
   schema?: StandardSchemaV1
 }
 
-const standardSchemaValidator: Validator<StandardSchemaValidatorOptions> = {
-  name: 'standardSchema',
+const standardSchemaValidatorPlugin: Plugin<StandardSchemaValidatorPluginOptions> = {
+  name: 'standardSchemaValidator',
   validateSync: (config, { schema }) => {
     if (!schema) return
 
@@ -93,5 +93,5 @@ const standardSchemaValidator: Validator<StandardSchemaValidatorOptions> = {
   },
 }
 
-export default standardSchemaValidator
-export type { StandardSchemaValidatorOptions }
+export default standardSchemaValidatorPlugin
+export type { StandardSchemaValidatorPluginOptions }

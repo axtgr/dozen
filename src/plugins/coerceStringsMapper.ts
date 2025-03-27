@@ -1,11 +1,11 @@
-import type { Mapper } from '../types.ts'
+import type { Plugin } from '../types.ts'
 
 interface CoerceTo {
   boolean?: boolean
   number?: boolean
 }
 
-type CoerceStringsMapperOptions = {
+type CoerceStringsMapperPluginOptions = {
   coerceStrings?:
     | boolean
     | (CoerceTo & {
@@ -13,8 +13,8 @@ type CoerceStringsMapperOptions = {
       })
 }
 
-const coerceStringsMapper: Mapper<CoerceStringsMapperOptions> = {
-  name: 'parseEnvValuesMapper',
+const coerceStringsMapperPlugin: Plugin<CoerceStringsMapperPluginOptions> = {
+  name: 'coerceStringsMapper',
   mapSync: (entry, options) => {
     if (!options.coerceStrings) return entry
 
@@ -87,5 +87,5 @@ const coerceStringsMapper: Mapper<CoerceStringsMapperOptions> = {
   },
 }
 
-export default coerceStringsMapper
-export type { CoerceStringsMapperOptions }
+export default coerceStringsMapperPlugin
+export type { CoerceStringsMapperPluginOptions }

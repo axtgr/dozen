@@ -1,6 +1,6 @@
-import type { Mapper } from '../types.ts'
+import type { Plugin } from '../types.ts'
 
-interface PrefixMapperOptions {
+interface PrefixMapperPluginOptions {
   name?: string
   prefix?: {
     filter?: boolean | string
@@ -9,8 +9,8 @@ interface PrefixMapperOptions {
   }
 }
 
-const prefixMapper: Mapper<PrefixMapperOptions> = {
-  name: 'prefix',
+const prefixMapperPlugin: Plugin<PrefixMapperPluginOptions> = {
+  name: 'prefixMapper',
   mapSync: (entry, options) => {
     if (!options.prefix) return entry
 
@@ -46,5 +46,5 @@ const prefixMapper: Mapper<PrefixMapperOptions> = {
   },
 }
 
-export default prefixMapper
-export type { PrefixMapperOptions }
+export default prefixMapperPlugin
+export type { PrefixMapperPluginOptions }

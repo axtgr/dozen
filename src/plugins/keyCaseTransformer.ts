@@ -1,12 +1,12 @@
-import type { Transformer } from '../types.ts'
+import type { Plugin } from '../types.ts'
 import { stringCases } from '../utils.ts'
 
-interface KeyCaseTransformerOptions {
+interface KeyCaseTransformerPluginOptions {
   keyCase?: keyof typeof stringCases
 }
 
-const keyCaseTransformer: Transformer<KeyCaseTransformerOptions> = {
-  name: 'keyCase',
+const keyCaseTransformerPlugin: Plugin<KeyCaseTransformerPluginOptions> = {
+  name: 'keyCaseTransformer',
   transformSync: (config, options) => {
     const changeCase = options.keyCase && stringCases[options.keyCase]
 
@@ -22,5 +22,5 @@ const keyCaseTransformer: Transformer<KeyCaseTransformerOptions> = {
   },
 }
 
-export default keyCaseTransformer
-export type { KeyCaseTransformerOptions }
+export default keyCaseTransformerPlugin
+export type { KeyCaseTransformerPluginOptions }

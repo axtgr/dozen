@@ -1,10 +1,10 @@
 import dotenv from 'dotenv'
-import type { Loader } from '../types.ts'
+import type { Plugin } from '../types.ts'
 
-type DotenvLoaderOptions = object
+type DotenvLoaderPluginOptions = object
 
-const dotenvLoader: Loader = {
-  name: 'dotenv',
+const dotenvLoaderPlugin: Plugin = {
+  name: 'dotenvLoader',
   canLoadSync: (entry) => {
     return Boolean(entry.tags?.includes('file') && entry.tags.includes('env'))
   },
@@ -26,5 +26,5 @@ const dotenvLoader: Loader = {
   },
 }
 
-export default dotenvLoader
-export type { DotenvLoaderOptions }
+export default dotenvLoaderPlugin
+export type { DotenvLoaderPluginOptions }

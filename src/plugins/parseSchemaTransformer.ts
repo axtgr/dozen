@@ -1,4 +1,4 @@
-import type { Transformer } from '../types.ts'
+import type { Plugin } from '../types.ts'
 
 function isParseableSchema(schema: unknown): schema is { parse: (value: unknown) => unknown } {
   return Boolean(
@@ -6,12 +6,12 @@ function isParseableSchema(schema: unknown): schema is { parse: (value: unknown)
   )
 }
 
-interface ParseSchemaTransformerOptions {
+interface ParseSchemaTransformerPluginOptions {
   schema?: unknown
 }
 
-const parseSchemaTransformer: Transformer<ParseSchemaTransformerOptions> = {
-  name: 'parseSchema',
+const parseSchemaTransformerPlugin: Plugin<ParseSchemaTransformerPluginOptions> = {
+  name: 'parseSchemaTransformer',
   transformSync: (config, options) => {
     if (!isParseableSchema(options.schema)) return config
     try {
@@ -22,5 +22,5 @@ const parseSchemaTransformer: Transformer<ParseSchemaTransformerOptions> = {
   },
 }
 
-export default parseSchemaTransformer
-export type { ParseSchemaTransformerOptions }
+export default parseSchemaTransformerPlugin
+export type { ParseSchemaTransformerPluginOptions }

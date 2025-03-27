@@ -1,12 +1,12 @@
 import { cosmiconfig, cosmiconfigSync } from 'cosmiconfig'
-import type { Loader } from '../types.ts'
+import type { Plugin } from '../types.ts'
 
-interface CosmiconfigLoaderOptions {
+interface CosmiconfigLoaderPluginOptions {
   name?: string
 }
 
-const cosmiconfigLoader: Loader<CosmiconfigLoaderOptions> = {
-  name: 'cosmiconfig',
+const cosmiconfigLoaderPlugin: Plugin<CosmiconfigLoaderPluginOptions> = {
+  name: 'cosmiconfigLoader',
   canLoadSync: (entry) => {
     return Boolean(typeof entry.value === 'string' && entry.tags?.includes('configFile'))
   },
@@ -40,5 +40,5 @@ const cosmiconfigLoader: Loader<CosmiconfigLoaderOptions> = {
   },
 }
 
-export default cosmiconfigLoader
-export type { CosmiconfigLoaderOptions }
+export default cosmiconfigLoaderPlugin
+export type { CosmiconfigLoaderPluginOptions }
