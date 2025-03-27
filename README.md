@@ -24,12 +24,14 @@ npm install dozen
 import dozen from 'dozen'
 
 // The simplest case.
+//
 // - Synchronously reads from:
 //     1. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
 //     2. Environment variables (process.env)
-// - Coerces strings to numbers and booleans
+// - Coerces strings to numbers and booleans when applicable
 // - Merges into a single object
 // - Converts keys to camelCase
+//
 const config = dozen().get()
 ```
 
@@ -50,14 +52,16 @@ const dzn = dozen({
 dzn.add(dozen.argv())
 
 // An advanced case.
+//
 // - Asynchronously reads from:
 //     1. The "myapp" field in package.json, myapp.config.json, myapprc.yaml, etc.
 //     2. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
 //     3. Environment variables (process.env)
 //     4. CLI arguments (process.argv)
 // - For env values, keeps only those with the MYAPP_ prefix, then removes the prefix
-// - Coerces strings to numbers and booleans for env and argv values
+// - Coerces strings to numbers and booleans for env and argv values when applicable
 // - Converts keys to camelCase
 // - Validates with the schema
+//
 const config = await dzn.getAsync()
 ```
