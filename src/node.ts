@@ -1,20 +1,18 @@
-import argvLoader, { type ArgvLoaderOptions } from '../src/loaders/argv.ts'
-import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from '../src/loaders/cosmiconfig.ts'
-import dotenvLoader, { type DotenvLoaderOptions } from '../src/loaders/dotenv.ts'
-import argv, { type ArgvSourceOptions } from '../src/sources/argv.ts'
-import configFile, { type ConfigFileSourceOptions } from '../src/sources/configFile.ts'
-import dotenv, { type DotenvSourceOptions } from '../src/sources/dotenv.ts'
-import env, { type EnvSourceOptions } from '../src/sources/env.ts'
-import keyCaseTransformer, { type KeyCaseTransformerOptions } from '../src/transformers/keyCase.ts'
+import dozen, { type DozenOptions, type ExtractOptions, type UnionToIntersection } from './index.ts'
+import argvLoader, { type ArgvLoaderOptions } from './loaders/argv.ts'
+import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from './loaders/cosmiconfig.ts'
+import dotenvLoader, { type DotenvLoaderOptions } from './loaders/dotenv.ts'
+import prefix, { type PrefixMapperOptions } from './mappers/prefix.ts'
+import argv, { type ArgvSourceOptions } from './sources/argv.ts'
+import configFile, { type ConfigFileSourceOptions } from './sources/configFile.ts'
+import dotenv, { type DotenvSourceOptions } from './sources/dotenv.ts'
+import env, { type EnvSourceOptions } from './sources/env.ts'
+import keyCaseTransformer, { type KeyCaseTransformerOptions } from './transformers/keyCase.ts'
 import parseSchemaTransformer, {
   type ParseSchemaTransformerOptions,
-} from '../src/transformers/parseSchema.ts'
-import standardSchema, {
-  type StandardSchemaValidatorOptions,
-} from '../src/validators/standardSchema.ts'
-import dozen, { type DozenOptions, type ExtractOptions, type UnionToIntersection } from './index.ts'
-import prefix, { type PrefixMapperOptions } from './mappers/prefix.ts'
+} from './transformers/parseSchema.ts'
 import type { Entry, Loader, Mapper, Reducer, Source, Transformer, Validator } from './types.ts'
+import standardSchema, { type StandardSchemaValidatorOptions } from './validators/standardSchema.ts'
 
 function dozenForNode<
   TSources extends (Source<any> | Entry | Entry[] | undefined | null | false)[],
