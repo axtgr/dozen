@@ -15,8 +15,8 @@
   "main": "src/index.ts",
   "files": ["src"],
   "exports": {
-    ".": "./src/index.ts",
-    "./node": "./src/node.ts"
+    ".": "./src/presets/node.ts",
+    "./base": "./src/index.ts"
   },
   "dependencies": {
     "cosmiconfig": "^9.0.0",

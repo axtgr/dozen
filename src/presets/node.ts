@@ -1,28 +1,32 @@
-import dozen, { type DozenOptions, type ExtractOptions, type UnionToIntersection } from './index.ts'
-import argvLoaderPlugin, { type ArgvLoaderPluginOptions } from './plugins/argvLoader.ts'
-import assignReducerPlugin, { type AssignReducerPluginOptions } from './plugins/assignReducer.ts'
+import dozen, {
+  type DozenOptions,
+  type ExtractOptions,
+  type UnionToIntersection,
+} from '../index.ts'
+import argvLoaderPlugin, { type ArgvLoaderPluginOptions } from '../plugins/argvLoader.ts'
+import assignReducerPlugin, { type AssignReducerPluginOptions } from '../plugins/assignReducer.ts'
 import coerceStringsMapperPlugin, {
   type CoerceStringsMapperPluginOptions,
-} from './plugins/coerceStringsMapper.ts'
+} from '../plugins/coerceStringsMapper.ts'
 import cosmiconfigLoaderPlugin, {
   type CosmiconfigLoaderPluginOptions,
-} from './plugins/cosmiconfigLoader.ts'
-import dotenvLoaderPlugin, { type DotenvLoaderPluginOptions } from './plugins/dotenvLoader.ts'
+} from '../plugins/cosmiconfigLoader.ts'
+import dotenvLoaderPlugin, { type DotenvLoaderPluginOptions } from '../plugins/dotenvLoader.ts'
 import keyCaseTransformerPlugin, {
   type KeyCaseTransformerPluginOptions,
-} from './plugins/keyCaseTransformer.ts'
+} from '../plugins/keyCaseTransformer.ts'
 import parseSchemaTransformerPlugin, {
   type ParseSchemaTransformerPluginOptions,
-} from './plugins/parseSchemaTransformer.ts'
-import prefixMapperPlugin, { type PrefixMapperPluginOptions } from './plugins/prefixMapper.ts'
+} from '../plugins/parseSchemaTransformer.ts'
+import prefixMapperPlugin, { type PrefixMapperPluginOptions } from '../plugins/prefixMapper.ts'
 import standardSchemaValidatorPlugin, {
   type StandardSchemaValidatorPluginOptions,
-} from './plugins/standardSchemaValidator.ts'
-import argv from './sources/argv.ts'
-import configFile, { type ConfigFileSourceOptions } from './sources/configFile.ts'
-import dotenv, { type DotenvSourceOptions } from './sources/dotenv.ts'
-import env, { type EnvSourceOptions } from './sources/env.ts'
-import type { Entry, Plugin, Source } from './types.ts'
+} from '../plugins/standardSchemaValidator.ts'
+import argv from '../sources/argv.ts'
+import configFile, { type ConfigFileSourceOptions } from '../sources/configFile.ts'
+import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
+import env, { type EnvSourceOptions } from '../sources/env.ts'
+import type { Entry, Plugin, Source } from '../types.ts'
 
 function dozenForNode<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
