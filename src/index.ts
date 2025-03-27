@@ -96,7 +96,7 @@ function dozen<
       const result = plugins.reduce(
         (result, plugin) => {
           if (!plugin.mapSync) return result
-          const returnedEntries = plugin.mapSync(entry, options)
+          const returnedEntries = plugin.mapSync(result.entry, options)
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
@@ -130,7 +130,7 @@ function dozen<
         async (resultPromise, plugin) => {
           if (!plugin.mapAsync) return resultPromise
           const result = await resultPromise
-          const returnedEntries = await plugin.mapAsync(entry, options)
+          const returnedEntries = await plugin.mapAsync(result.entry, options)
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
