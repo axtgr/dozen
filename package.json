@@ -1,11 +1,23 @@
 {
   "name": "dozen",
   "version": "0.1.0",
-  "description": "Read config from a dozen of sources",
+  "description": "Read config from a dozen sources",
   "author": "Alex Schneider <me@schneider.ax>",
   "license": "ISC",
   "repository": "https://github.com/axtgr/dozen",
-  "keywords": ["config", "configuration", "env", "environment", "variables", "dotenv", "schema"],
+  "keywords": [
+    "config",
+    "configuration",
+    "env",
+    "environment",
+    "variables",
+    "dotenv",
+    "argv",
+    "validate",
+    "validation",
+    "schema",
+    "zod"
+  ],
   "private": true,
   "packageManager": "bun@1.2.4",
   "engines": {
@@ -16,7 +28,8 @@
   "files": ["src"],
   "exports": {
     ".": "./src/presets/node.ts",
-    "./base": "./src/index.ts"
+    "./base": "./src/index.ts",
+    "./plugins/*": "./src/plugins/*.ts"
   },
   "dependencies": {
     "cosmiconfig": "^9.0.0",
