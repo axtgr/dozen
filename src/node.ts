@@ -58,7 +58,7 @@ function dozenForNode<
 ) {
   const name = options?.name
   return dozen({
-    sources: [configFile(), dotenv()],
+    sources: [configFile(), dotenv(), env()],
     plugins: [
       cosmiconfigLoaderPlugin,
       dotenvLoaderPlugin,
