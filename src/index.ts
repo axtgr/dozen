@@ -90,8 +90,8 @@ function dozen<
     return loadedEntries.flat()
   }
 
-  const processEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
-    return loadEntriesSync(entries).flatMap((entry) => {
+  const mapEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
+    return entries.flatMap((entry) => {
       if (processedIds.includes(entry.id)) return []
       const result = plugins.reduce(
         (result, plugin) => {
@@ -119,12 +119,8 @@ function dozen<
     })
   }
 
-  const processEntriesAsync = async (
-    entries: Entry[],
-    processedIds: string[] = [],
-  ): Promise<Entry[]> => {
-    const loadedEntries = await loadEntriesAsync(entries)
-    const promises = loadedEntries.map(async (entry) => {
+  const mapEntriesAsync = async (entries: Entry[], processedIds: string[] = []) => {
+    const promises = entries.map(async (entry) => {
       if (processedIds.includes(entry.id)) return []
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
@@ -157,6 +153,19 @@ function dozen<
     })
     const processedEntries = await Promise.all(promises)
     return processedEntries.flat()
+  }
+
+  const processEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
+    const loadedEntries = loadEntriesSync(entries)
+    return mapEntriesSync(loadedEntries, processedIds)
+  }
+
+  const processEntriesAsync = async (
+    entries: Entry[],
+    processedIds: string[] = [],
+  ): Promise<Entry[]> => {
+    const loadedEntries = await loadEntriesAsync(entries)
+    return mapEntriesAsync(loadedEntries, processedIds)
   }
 
   const ensureAllEntriesAreProcessedSync = () => {
