@@ -1,5 +1,6 @@
 import type { Entry, Plugin, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
+import wrapPlugin from './wrapPlugin.ts'
 
 function sourcesToEntries<TOptions extends object>(
   sources:
@@ -36,7 +37,7 @@ function dozen<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (Plugin | undefined | null | false)[],
 >(options: DozenOptions<TSources, TPlugins>) {
-  const plugins = toFilteredArray(options.plugins)
+  const plugins = toFilteredArray(options.plugins).map(wrapPlugin)
 
   let config: object | undefined
   let unprocessedEntries: Entry[] = sourcesToEntries(options.sources, options)
@@ -46,9 +47,9 @@ function dozen<
   const loadEntriesSync = (entries: Entry[]): Entry[] => {
     return entries.flatMap((entry) => {
       if (entry.loaded) return entry
-      const plugin = plugins.find((p) => p.canLoadSync?.(entry, options) && p.loadSync)
-      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id}`)
-      const returnedEntries = toFilteredArray(plugin.loadSync?.(entry, options))
+      const plugin = plugins.find((p) => p.canLoadSync(entry, options))
+      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id} synchronously`)
+      const returnedEntries = plugin.loadSync!(entry, options)
       const allLoaded = returnedEntries.every((returnedEntry) => {
         if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
           throw new Error(
@@ -65,15 +66,13 @@ function dozen<
     const promises = entries.map(async (entry) => {
       if (entry.loaded) return entry
 
-      const canPluginsLoadPromises = plugins.map(
-        (p) => p.loadAsync && p.canLoadAsync?.(entry, options),
-      )
+      const canPluginsLoadPromises = plugins.map((p) => p.canLoadAsync(entry, options))
       const canPluginsLoad = await Promise.all(canPluginsLoadPromises)
       const pluginIndex = canPluginsLoad.findIndex(Boolean)
       const plugin = pluginIndex > -1 ? plugins[pluginIndex] : undefined
-      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id}`)
+      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id} asynchronously`)
 
-      const returnedEntries = toFilteredArray(await plugin.loadAsync?.(entry, options))
+      const returnedEntries = await plugin.loadAsync!(entry, options)
 
       const allLoaded = returnedEntries.every((returnedEntry) => {
         // TODO: remove/revamp
@@ -97,7 +96,7 @@ function dozen<
       const result = plugins.reduce(
         (result, plugin) => {
           if (!plugin.mapSync) return result
-          const returnedEntries = toFilteredArray(plugin.mapSync(entry, options))
+          const returnedEntries = plugin.mapSync(entry, options)
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
@@ -131,7 +130,7 @@ function dozen<
         async (resultPromise, plugin) => {
           if (!plugin.mapAsync) return resultPromise
           const result = await resultPromise
-          const returnedEntries = toFilteredArray(await plugin.mapAsync(entry, options))
+          const returnedEntries = await plugin.mapAsync(entry, options)
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
