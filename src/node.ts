@@ -2,6 +2,7 @@ import dozen, { type DozenOptions, type ExtractOptions, type UnionToIntersection
 import argvLoader, { type ArgvLoaderOptions } from './loaders/argv.ts'
 import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from './loaders/cosmiconfig.ts'
 import dotenvLoader, { type DotenvLoaderOptions } from './loaders/dotenv.ts'
+import coerceStrings, { type CoerceStringsMapperOptions } from './mappers/coerceStrings.ts'
 import prefix, { type PrefixMapperOptions } from './mappers/prefix.ts'
 import argv, { type ArgvSourceOptions } from './sources/argv.ts'
 import configFile, { type ConfigFileSourceOptions } from './sources/configFile.ts'
@@ -31,7 +32,7 @@ function dozenForNode<
         Source<ArgvSourceOptions>,
       ],
       [Loader<CosmiconfigLoaderOptions>, Loader<DotenvLoaderOptions>, Loader<ArgvLoaderOptions>],
-      [Mapper<PrefixMapperOptions>],
+      [Mapper<PrefixMapperOptions>, Mapper<CoerceStringsMapperOptions>],
       Reducer,
       [Transformer<KeyCaseTransformerOptions>, Transformer<ParseSchemaTransformerOptions>],
       [Validator<StandardSchemaValidatorOptions>]
@@ -56,7 +57,7 @@ function dozenForNode<
   return dozen({
     sources: [configFile(), dotenv(), env(), argv()],
     loaders: [cosmiconfigLoader, dotenvLoader, argvLoader],
-    mappers: [prefix],
+    mappers: [prefix, coerceStrings],
     transformers: [keyCaseTransformer, parseSchemaTransformer],
     validators: [standardSchema],
     prefix: name
@@ -70,6 +71,12 @@ function dozenForNode<
         }
       : undefined,
     keyCase: 'camel',
+    coerceStrings: {
+      byTag: {
+        env: true,
+        argv: true,
+      },
+    },
     ...options,
   } as any)
 }
