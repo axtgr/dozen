@@ -75,6 +75,7 @@ const coerceStringsMapperPlugin: Plugin<CoerceStringsMapperPluginOptions> = {
           }
         }
 
+        result[key] = value
         return result
       },
       Object.create(null) as Record<string, unknown>,
