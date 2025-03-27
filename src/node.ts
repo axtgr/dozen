@@ -18,7 +18,7 @@ import prefixMapperPlugin, { type PrefixMapperPluginOptions } from './plugins/pr
 import standardSchemaValidatorPlugin, {
   type StandardSchemaValidatorPluginOptions,
 } from './plugins/standardSchemaValidator.ts'
-import argv, { type ArgvSourceOptions } from './sources/argv.ts'
+import argv from './sources/argv.ts'
 import configFile, { type ConfigFileSourceOptions } from './sources/configFile.ts'
 import dotenv, { type DotenvSourceOptions } from './sources/dotenv.ts'
 import env, { type EnvSourceOptions } from './sources/env.ts'
@@ -30,12 +30,7 @@ function dozenForNode<
 >(
   options?: Omit<
     DozenOptions<
-      [
-        Source<ConfigFileSourceOptions>,
-        Source<DotenvSourceOptions>,
-        Source<EnvSourceOptions>,
-        Source<ArgvSourceOptions>,
-      ],
+      [Source<ConfigFileSourceOptions>, Source<DotenvSourceOptions>, Source<EnvSourceOptions>],
       [
         Plugin<CosmiconfigLoaderPluginOptions>,
         Plugin<DotenvLoaderPluginOptions>,
