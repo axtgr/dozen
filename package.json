@@ -1,7 +1,7 @@
 {
   "name": "dozen",
   "version": "0.1.0",
-  "description": "Read config from a dozen sources",
+  "description": "Load config from a dozen sources, normalize and validate with Zod",
   "author": "Alex Schneider <me@schneider.ax>",
   "license": "ISC",
   "repository": "https://github.com/axtgr/dozen",
