@@ -8,17 +8,21 @@ interface CosmiconfigLoaderPluginOptions {
 const cosmiconfigLoaderPlugin: Plugin<CosmiconfigLoaderPluginOptions> = {
   name: 'cosmiconfigLoader',
   canLoadSync: (entry) => {
-    return Boolean(typeof entry.value === 'string' && entry.tags?.includes('configFile'))
+    return Boolean(
+      typeof entry.value === 'string' &&
+        (entry.tags?.includes('configFile') || entry.tags?.includes('file')),
+    )
   },
   loadSync: (entry) => {
-    const explorer = cosmiconfigSync(entry.value as string, {
+    const isConfigFile = Boolean(entry.tags?.includes('configFile'))
+    const explorer = cosmiconfigSync(isConfigFile ? (entry.value as string) : '', {
       loaders: {
         // .mjs files can only be loaded via an async import, and cosmiconfig has no sync
         // loader for them, so we just ignore them here.
         '.mjs': () => null,
       },
     })
-    const result = explorer.search()
+    const result = isConfigFile ? explorer.search() : explorer.load(entry.value as string)
     return [
       {
         ...entry,
@@ -28,8 +32,9 @@ const cosmiconfigLoaderPlugin: Plugin<CosmiconfigLoaderPluginOptions> = {
     ]
   },
   loadAsync: async (entry) => {
-    const explorer = cosmiconfig(entry.value as string)
-    const result = await explorer.search()
+    const isConfigFile = Boolean(entry.tags?.includes('configFile'))
+    const explorer = cosmiconfig(isConfigFile ? (entry.value as string) : '')
+    const result = await (isConfigFile ? explorer.search() : explorer.load(entry.value as string))
     return [
       {
         ...entry,
