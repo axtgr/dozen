@@ -1,5 +1,5 @@
 import rawSource from './sources/raw.ts'
-import type { Entry, Plugin, Source } from './types.ts'
+import type { Entry, Plugin, PluginFactory, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
 import wrapPlugin from './wrapPlugin.ts'
 
@@ -26,7 +26,7 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 type DozenOptions<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
-  TPlugins extends (Plugin | undefined | null | false)[],
+  TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
 > = {
   sources?: TSources
   plugins?: TPlugins
@@ -35,9 +35,13 @@ type DozenOptions<
 
 function dozen<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
-  TPlugins extends (Plugin | undefined | null | false)[],
+  TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
 >(options: DozenOptions<TSources, TPlugins>) {
-  const plugins = toFilteredArray(options.plugins).map(wrapPlugin)
+  const plugins = toFilteredArray(options.plugins).map((pluginOrFactory) => {
+    const plugin =
+      typeof pluginOrFactory === 'function' ? pluginOrFactory(options) : pluginOrFactory
+    return wrapPlugin(plugin)
+  })
 
   let config: object | undefined
   let unprocessedEntries: Entry[] = toEntries(options.sources, options)

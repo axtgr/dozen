@@ -1,28 +1,30 @@
 import { parseArgs } from 'node:util'
-import type { Plugin } from '../types.ts'
+import type { PluginFactory } from '../types.ts'
 
-type ArgvLoaderPluginOptions = object
+type ArgvLoaderOptions = object
 
-const argvLoaderPlugin: Plugin<ArgvLoaderPluginOptions> = {
-  name: 'argvLoader',
-  canLoadSync: (entry) => {
-    return Boolean(entry.tags?.includes('argv') && (!entry.value || Array.isArray(entry.value)))
-  },
-  loadSync: (entry) => {
-    const { values } = parseArgs({
-      args: entry.value as string[],
-      strict: false,
-      allowNegative: true,
-    })
-    return [
-      {
-        ...entry,
-        loaded: true,
-        value: values,
-      },
-    ]
-  },
+const argvLoader: PluginFactory<ArgvLoaderOptions> = () => {
+  return {
+    name: 'argvLoader',
+    canLoadSync: (entry) => {
+      return Boolean(entry.tags?.includes('argv') && (!entry.value || Array.isArray(entry.value)))
+    },
+    loadSync: (entry) => {
+      const { values } = parseArgs({
+        args: entry.value as string[],
+        strict: false,
+        allowNegative: true,
+      })
+      return [
+        {
+          ...entry,
+          loaded: true,
+          value: values,
+        },
+      ]
+    },
+  }
 }
 
-export default argvLoaderPlugin
-export type { ArgvLoaderPluginOptions }
+export default argvLoader
+export type { ArgvLoaderOptions }

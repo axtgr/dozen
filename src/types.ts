@@ -1,5 +1,3 @@
-import type { UnionOptional } from './utils.ts'
-
 interface Options {
   name: string
 }
@@ -42,4 +40,6 @@ interface Plugin<TOptions extends object = object> {
   validateAsync?: (config: object, options: TOptions) => Promise<void>
 }
 
-export type { Options, Entry, Source, Plugin }
+type PluginFactory<TOptions extends object = object> = (options: TOptions) => Plugin<TOptions>
+
+export type { Options, Entry, Source, Plugin, PluginFactory }

@@ -1,4 +1,4 @@
-import type { Plugin } from '../types.ts'
+import type { PluginFactory } from '../types.ts'
 
 // https://standardschema.dev/
 
@@ -71,27 +71,29 @@ declare namespace StandardSchemaV1 {
   >['output']
 }
 
-interface StandardSchemaValidatorPluginOptions {
+interface StandardSchemaValidatorOptions {
   schema?: StandardSchemaV1
 }
 
-const standardSchemaValidatorPlugin: Plugin<StandardSchemaValidatorPluginOptions> = {
-  name: 'standardSchemaValidator',
-  validateSync: (config, { schema }) => {
-    if (!schema) return
+const standardSchemaValidator: PluginFactory<StandardSchemaValidatorOptions> = () => {
+  return {
+    name: 'standardSchemaValidator',
+    validateSync: (config, { schema }) => {
+      if (!schema) return
 
-    const result = schema['~standard'].validate(config)
+      const result = schema['~standard'].validate(config)
 
-    if (result instanceof Promise)
-      throw new Error(
-        "The provided standard schema's validate method returned a promise when a sync validation was expected",
-      )
+      if (result instanceof Promise)
+        throw new Error(
+          "The provided standard schema's validate method returned a promise when a sync validation was expected",
+        )
 
-    if (result.issues) {
-      throw new Error(JSON.stringify(result.issues, null, 2))
-    }
-  },
+      if (result.issues) {
+        throw new Error(JSON.stringify(result.issues, null, 2))
+      }
+    },
+  }
 }
 
-export default standardSchemaValidatorPlugin
-export type { StandardSchemaValidatorPluginOptions }
+export default standardSchemaValidator
+export type { StandardSchemaValidatorOptions }

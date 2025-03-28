@@ -1,6 +1,6 @@
-import type { Plugin } from '../types.ts'
+import type { PluginFactory } from '../types.ts'
 
-interface PrefixMapperPluginOptions {
+interface PrefixMapperOptions {
   name?: string
   prefix?: {
     filter?: boolean | string
@@ -9,42 +9,44 @@ interface PrefixMapperPluginOptions {
   }
 }
 
-const prefixMapperPlugin: Plugin<PrefixMapperPluginOptions> = {
-  name: 'prefixMapper',
-  mapSync: (entry, options) => {
-    if (!options.prefix) return entry
+const prefixMapper: PluginFactory<PrefixMapperOptions> = (options) => {
+  return {
+    name: 'prefixMapper',
+    mapSync: (entry) => {
+      if (!options.prefix) return entry
 
-    let { filter, remove } = options.prefix
+      let { filter, remove } = options.prefix
 
-    if (options.prefix.byTag && entry.tags?.length) {
-      entry.tags.forEach((tag) => {
-        const tagOptions = options.prefix!.byTag![tag] || {}
-        if ('filter' in tagOptions) filter = tagOptions.filter
-        if ('remove' in tagOptions) remove = tagOptions.remove
-      })
-    }
+      if (options.prefix.byTag && entry.tags?.length) {
+        entry.tags.forEach((tag) => {
+          const tagOptions = options.prefix!.byTag![tag] || {}
+          if ('filter' in tagOptions) filter = tagOptions.filter
+          if ('remove' in tagOptions) remove = tagOptions.remove
+        })
+      }
 
-    const filterPrefix = filter === true ? options.name : filter
-    const removePrefix = remove === true ? options.name : remove
+      const filterPrefix = filter === true ? options.name : filter
+      const removePrefix = remove === true ? options.name : remove
 
-    if (!filterPrefix && !removePrefix) return entry
+      if (!filterPrefix && !removePrefix) return entry
 
-    const value = Object.entries(entry.value as object).reduce(
-      (result, [key, value]) => {
-        if (filterPrefix && !key.startsWith(filterPrefix)) return result
-        key = removePrefix ? key.replace(removePrefix, '') : key
-        result[key] = value
-        return result
-      },
-      Object.create(null) as Record<string, unknown>,
-    )
+      const value = Object.entries(entry.value as object).reduce(
+        (result, [key, value]) => {
+          if (filterPrefix && !key.startsWith(filterPrefix)) return result
+          key = removePrefix ? key.replace(removePrefix, '') : key
+          result[key] = value
+          return result
+        },
+        Object.create(null) as Record<string, unknown>,
+      )
 
-    return {
-      ...entry,
-      value,
-    }
-  },
+      return {
+        ...entry,
+        value,
+      }
+    },
+  }
 }
 
-export default prefixMapperPlugin
-export type { PrefixMapperPluginOptions }
+export default prefixMapper
+export type { PrefixMapperOptions }

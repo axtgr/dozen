@@ -3,49 +3,47 @@ import dozen, {
   type ExtractOptions,
   type UnionToIntersection,
 } from '../index.ts'
-import argvLoaderPlugin, { type ArgvLoaderPluginOptions } from '../plugins/argvLoader.ts'
-import assignReducerPlugin, { type AssignReducerPluginOptions } from '../plugins/assignReducer.ts'
-import coerceStringsMapperPlugin, {
-  type CoerceStringsMapperPluginOptions,
+import argvLoader, { type ArgvLoaderOptions } from '../plugins/argvLoader.ts'
+import assignReducer, { type AssignReducerOptions } from '../plugins/assignReducer.ts'
+import coerceStringsMapper, {
+  type CoerceStringsMapperOptions,
 } from '../plugins/coerceStringsMapper.ts'
-import cosmiconfigLoaderPlugin, {
-  type CosmiconfigLoaderPluginOptions,
-} from '../plugins/cosmiconfigLoader.ts'
-import dotenvLoaderPlugin, { type DotenvLoaderPluginOptions } from '../plugins/dotenvLoader.ts'
-import keyCaseTransformerPlugin, {
-  type KeyCaseTransformerPluginOptions,
+import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from '../plugins/cosmiconfigLoader.ts'
+import dotenvLoader, { type DotenvLoaderOptions } from '../plugins/dotenvLoader.ts'
+import keyCaseTransformer, {
+  type KeyCaseTransformerOptions,
 } from '../plugins/keyCaseTransformer.ts'
-import parseSchemaTransformerPlugin, {
-  type ParseSchemaTransformerPluginOptions,
+import parseSchemaTransformer, {
+  type ParseSchemaTransformerOptions,
 } from '../plugins/parseSchemaTransformer.ts'
-import prefixMapperPlugin, { type PrefixMapperPluginOptions } from '../plugins/prefixMapper.ts'
-import standardSchemaValidatorPlugin, {
-  type StandardSchemaValidatorPluginOptions,
+import prefixMapper, { type PrefixMapperOptions } from '../plugins/prefixMapper.ts'
+import standardSchemaValidator, {
+  type StandardSchemaValidatorOptions,
 } from '../plugins/standardSchemaValidator.ts'
 import argv from '../sources/argv.ts'
 import configFile, { type ConfigFileSourceOptions } from '../sources/configFile.ts'
 import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
-import type { Entry, Plugin, Source } from '../types.ts'
+import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
 
 function dozenForNode<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
-  TPlugins extends (Plugin | Entry | Entry[] | undefined | null | false)[],
+  TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
 >(
   options?: Omit<
     DozenOptions<
       [Source<ConfigFileSourceOptions>, Source<DotenvSourceOptions>, Source<EnvSourceOptions>],
       [
-        Plugin<CosmiconfigLoaderPluginOptions>,
-        Plugin<DotenvLoaderPluginOptions>,
-        Plugin<ArgvLoaderPluginOptions>,
-        Plugin<PrefixMapperPluginOptions>,
-        Plugin<CoerceStringsMapperPluginOptions>,
-        Plugin<AssignReducerPluginOptions>,
-        Plugin<KeyCaseTransformerPluginOptions>,
-        Plugin<ParseSchemaTransformerPluginOptions>,
-        Plugin<StandardSchemaValidatorPluginOptions>,
+        Plugin<CosmiconfigLoaderOptions>,
+        Plugin<DotenvLoaderOptions>,
+        Plugin<ArgvLoaderOptions>,
+        Plugin<PrefixMapperOptions>,
+        Plugin<CoerceStringsMapperOptions>,
+        Plugin<AssignReducerOptions>,
+        Plugin<KeyCaseTransformerOptions>,
+        Plugin<ParseSchemaTransformerOptions>,
+        Plugin<StandardSchemaValidatorOptions>,
       ]
     >,
     'sources' | 'plugins'
@@ -60,15 +58,15 @@ function dozenForNode<
   return dozen({
     sources: [configFile(), dotenv(), env()],
     plugins: [
-      cosmiconfigLoaderPlugin,
-      dotenvLoaderPlugin,
-      argvLoaderPlugin,
-      prefixMapperPlugin,
-      coerceStringsMapperPlugin,
-      assignReducerPlugin,
-      keyCaseTransformerPlugin,
-      parseSchemaTransformerPlugin,
-      standardSchemaValidatorPlugin,
+      cosmiconfigLoader,
+      dotenvLoader,
+      argvLoader,
+      prefixMapper,
+      coerceStringsMapper,
+      assignReducer,
+      keyCaseTransformer,
+      parseSchemaTransformer,
+      standardSchemaValidator,
     ],
     prefix: name
       ? {

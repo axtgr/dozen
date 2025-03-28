@@ -1,11 +1,13 @@
-import type { Plugin } from '../types.ts'
+import type { PluginFactory } from '../types.ts'
 
-type AssignReducerPluginOptions = object
+type AssignReducerOptions = object
 
-const assignReducerPlugin: Plugin<AssignReducerPluginOptions> = {
-  name: 'assignReducer',
-  reduceSync: (config, entry) => Object.assign(config, entry.value),
+const assignReducer: PluginFactory<AssignReducerOptions> = () => {
+  return {
+    name: 'assignReducer',
+    reduceSync: (config, entry) => Object.assign(config, entry.value),
+  }
 }
 
-export default assignReducerPlugin
-export type { AssignReducerPluginOptions }
+export default assignReducer
+export type { AssignReducerOptions }
