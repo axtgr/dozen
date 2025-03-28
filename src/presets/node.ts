@@ -26,6 +26,7 @@ import argv from '../sources/argv.ts'
 import configFile, { type ConfigFileSourceOptions } from '../sources/configFile.ts'
 import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../sources/env.ts'
+import file from '../sources/file.ts'
 import type { Entry, Plugin, Source } from '../types.ts'
 
 function dozenForNode<
@@ -94,5 +95,6 @@ dozenForNode.configFile = configFile
 dozenForNode.env = env
 dozenForNode.dotenv = dotenv
 dozenForNode.argv = argv
+dozenForNode.file = file
 
 export default dozenForNode
