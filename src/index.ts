@@ -3,8 +3,17 @@ import type { Entry, Plugin, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
 import wrapPlugin from './wrapPlugin.ts'
 
-function toEntries<TOptions extends object>(items: unknown, options: TOptions) {
-  return toFilteredArray(items as any).flatMap((item) => {
+function toEntries<TOptions extends object>(
+  items:
+    | Source
+    | object
+    | undefined
+    | null
+    | false
+    | (Source | object | undefined | null | false)[],
+  options: TOptions,
+) {
+  return toFilteredArray(items).flatMap((item) => {
     return typeof item === 'function' ? (item as Source)(options) : rawSource(item)(options)
   })
 }
@@ -240,7 +249,15 @@ function dozen<
       return config
     },
 
-    add(items: unknown) {
+    add(
+      items:
+        | Source
+        | object
+        | undefined
+        | null
+        | false
+        | (Source | object | undefined | null | false)[],
+    ) {
       const newEntries = toEntries(items, options)
       unprocessedEntries.push(...newEntries)
       return this
