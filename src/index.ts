@@ -1,20 +1,11 @@
+import rawSource from './sources/raw.ts'
 import type { Entry, Plugin, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
 import wrapPlugin from './wrapPlugin.ts'
 
-function sourcesToEntries<TOptions extends object>(
-  sources:
-    | Source
-    | Entry
-    | Entry[]
-    | undefined
-    | null
-    | false
-    | (Source | Entry | Entry[] | undefined | null | false)[],
-  options: TOptions,
-) {
-  return toFilteredArray(sources).flatMap((source) => {
-    return typeof source === 'function' ? source(options) : source
+function toEntries<TOptions extends object>(items: unknown, options: TOptions) {
+  return toFilteredArray(items as any).flatMap((item) => {
+    return typeof item === 'function' ? (item as Source)(options) : rawSource(item)(options)
   })
 }
 
@@ -40,7 +31,7 @@ function dozen<
   const plugins = toFilteredArray(options.plugins).map(wrapPlugin)
 
   let config: object | undefined
-  let unprocessedEntries: Entry[] = sourcesToEntries(options.sources, options)
+  let unprocessedEntries: Entry[] = toEntries(options.sources, options)
   const processedEntries: Entry[] = []
   let processingPromise = Promise.resolve()
 
@@ -249,8 +240,8 @@ function dozen<
       return config
     },
 
-    add(items: Source | Source[] | Entry | Entry[]) {
-      const newEntries = sourcesToEntries(items, options)
+    add(items: unknown) {
+      const newEntries = toEntries(items, options)
       unprocessedEntries.push(...newEntries)
       return this
     },
