@@ -1,9 +1,8 @@
-- [ ] Tests.
-- [ ] Better handling of situations when entries aren't loaded by loaders.
-- [ ] Error handling.
-- [ ] Config extension via a property (e.g. `{ extends: '../configs/base.json' }`).
-- [ ] Per-entry cache. When an entry with an existing id is emitted by a source, only this entry should be processed, and then the config should be rebuilt using all the processed (cached and new) entries.
-- [ ] Watching for changes.
-- [ ] React integration.
-- [ ] Forking.
-- [ ] Smart merging. Implement a reducer that deeply merges configs while concatenating arrays.
+- Tests.
+- Better handling of situations when entries aren't loaded by loaders.
+- Error handling.
+- Config extension via a property (e.g. `{ extends: '../configs/base.json' }`).
+- Per-entry cache. When an entry with an existing id is emitted by a source, only this entry should be processed, and then the config should be rebuilt using all the processed (cached and new) entries.
+- Watching for changes.
+- React integration.
+- Smart merging. Implement a reducer that deeply merges configs while concatenating arrays.
