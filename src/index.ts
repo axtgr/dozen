@@ -1,3 +1,5 @@
+import forkLoader from './plugins/forkLoader.ts'
+import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
 import type { Entry, Plugin, PluginFactory, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
@@ -247,7 +249,7 @@ function dozen<
     }
   }
 
-  return {
+  const instance = {
     get() {
       ensureConfigIsReadySync()
       return config
@@ -272,7 +274,17 @@ function dozen<
       unprocessedEntries.push(...newEntries)
       return this
     },
+
+    fork(forkOptions: DozenOptions<TSources, TPlugins>) {
+      const mergedOptions = {
+        ...options,
+        sources: [fork(instance), ...(forkOptions?.sources || [])],
+        plugins: [forkLoader, ...(options.plugins || []), ...(forkOptions?.plugins || [])],
+      } as DozenOptions<TSources, TPlugins>
+      return dozen(mergedOptions)
+    },
   }
+  return instance
 }
 
 export default dozen
