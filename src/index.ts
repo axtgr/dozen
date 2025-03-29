@@ -18,7 +18,13 @@ function toEntries<TOptions extends object>(
   })
 }
 
-type ExtractOptions<T> = T extends Source<infer O> ? O : T extends Plugin<infer O> ? O : never
+type ExtractOptions<T> = T extends Source<infer O>
+  ? O
+  : T extends PluginFactory<infer O>
+    ? O
+    : T extends Plugin<infer O>
+      ? O
+      : never
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
