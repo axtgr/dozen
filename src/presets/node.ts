@@ -55,19 +55,21 @@ function dozenForNode<
     },
 ) {
   const name = options?.name
+  const sources = [configFile(), dotenv(), env()]
+  const plugins = [
+    cosmiconfigLoader,
+    dotenvLoader,
+    argvLoader,
+    prefixMapper,
+    coerceStringsMapper,
+    assignReducer,
+    keyCaseTransformer,
+    parseSchemaTransformer,
+    standardSchemaValidator,
+  ]
   return dozen({
-    sources: [configFile(), dotenv(), env()],
-    plugins: [
-      cosmiconfigLoader,
-      dotenvLoader,
-      argvLoader,
-      prefixMapper,
-      coerceStringsMapper,
-      assignReducer,
-      keyCaseTransformer,
-      parseSchemaTransformer,
-      standardSchemaValidator,
-    ],
+    sources,
+    plugins,
     prefix: name
       ? {
           byTag: {
@@ -86,7 +88,7 @@ function dozenForNode<
       },
     },
     ...options,
-  } as any)
+  } as DozenOptions<typeof sources, typeof plugins>)
 }
 
 dozenForNode.configFile = configFile
