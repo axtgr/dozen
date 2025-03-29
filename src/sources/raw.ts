@@ -8,6 +8,7 @@ function raw(value: unknown): Source {
   const values = Array.isArray(value) ? value : [value]
   const entries = values.map((value) => ({
     id: `raw-${id++}`,
+    loaded: true,
     value,
   }))
   return () => entries
