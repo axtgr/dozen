@@ -3,8 +3,6 @@ import { toFilteredArray } from './utils.ts'
 
 interface WrappedPlugin<TOptions extends object> {
   name: string
-  canLoadSync: (entry: Entry, options: TOptions) => boolean
-  canLoadAsync: (entry: Entry, options: TOptions) => Promise<boolean>
   loadSync?: (entry: Entry, options: TOptions) => Entry[]
   loadAsync?: (entry: Entry, options: TOptions) => Promise<Entry[]>
   mapSync?: (entry: Entry, options: TOptions) => Entry[]
@@ -20,9 +18,6 @@ interface WrappedPlugin<TOptions extends object> {
 function wrapPlugin<TOptions extends object>(plugin: Plugin<TOptions>) {
   const wrappedPlugin: WrappedPlugin<TOptions> = {
     name: plugin.name,
-    canLoadSync: plugin.canLoadSync ?? (() => false),
-    canLoadAsync:
-      plugin.canLoadAsync ?? (async (entry, options) => wrappedPlugin.canLoadSync!(entry, options)),
   }
 
   if (plugin.loadSync) {

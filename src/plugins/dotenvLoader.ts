@@ -1,15 +1,17 @@
 import dotenv from 'dotenv'
-import type { PluginFactory } from '../types.ts'
+import type { Entry, PluginFactory } from '../types.ts'
+
+function canLoadEntry(entry: Entry) {
+  return entry.tags?.includes('file') && entry.tags.includes('env')
+}
 
 type DotenvLoaderOptions = object
 
 const dotenvLoader: PluginFactory<DotenvLoaderOptions> = () => {
   return {
     name: 'dotenvLoader',
-    canLoadSync: (entry) => {
-      return Boolean(entry.tags?.includes('file') && entry.tags.includes('env'))
-    },
     loadSync: (entry) => {
+      if (!canLoadEntry(entry)) return entry
       const { error, parsed } = dotenv.config({
         path: entry.value as string | string[],
         processEnv: {},

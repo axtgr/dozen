@@ -14,12 +14,10 @@ type Source<TOptions extends object = object> = (options: TOptions) => Entry[]
 
 interface Plugin<TOptions extends object = object> {
   name: string
-  canLoadSync?: (entry: Entry, options: TOptions) => boolean
   loadSync?: (
     entry: Entry,
     options: TOptions,
   ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
-  canLoadAsync?: (entry: Entry, options: TOptions) => Promise<boolean>
   loadAsync?: (
     entry: Entry,
     options: TOptions,

@@ -1,16 +1,20 @@
 import type Dozen from '../index.ts'
-import type { PluginFactory } from '../types.ts'
+import type { Entry, PluginFactory } from '../types.ts'
+
+function canLoadEntry(entry: Entry) {
+  return (
+    entry.tags?.includes('fork') &&
+    typeof (entry?.value as ReturnType<typeof Dozen> | undefined)?.get === 'function'
+  )
+}
 
 type ForkLoaderOptions = object
 
 const forkLoader: PluginFactory<ForkLoaderOptions> = () => {
   return {
     name: 'forkLoader',
-    canLoadSync: (entry) => {
-      return Boolean(entry.tags?.includes('fork'))
-    },
     loadSync: (entry) => {
-      if (typeof (entry?.value as ReturnType<typeof Dozen>)?.get !== 'function') return entry
+      if (!canLoadEntry(entry)) return entry
       return {
         id: entry.id,
         loaded: true,
@@ -18,7 +22,7 @@ const forkLoader: PluginFactory<ForkLoaderOptions> = () => {
       }
     },
     loadAsync: async (entry) => {
-      if (typeof (entry?.value as ReturnType<typeof Dozen>)?.get !== 'function') return entry
+      if (!canLoadEntry(entry)) return entry
       return {
         id: entry.id,
         loaded: true,

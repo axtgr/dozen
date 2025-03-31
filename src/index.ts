@@ -3,7 +3,7 @@ import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
 import type { Entry, Plugin, PluginFactory, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-import wrapPlugin from './wrapPlugin.ts'
+import wrapPlugin, { type WrappedPlugin } from './wrapPlugin.ts'
 
 function toEntries<TOptions extends object>(
   items:
@@ -56,55 +56,81 @@ function dozen<
   const processedEntries: Entry[] = []
   let processingPromise = Promise.resolve()
 
-  const loadEntriesSync = (entries: Entry[]): Entry[] => {
+  const loadEntriesSync = (entries: Entry[], loadedIds: Set<string>): Entry[] => {
     return entries.flatMap((entry) => {
+      if (loadedIds.has(entry.id)) return []
+      loadedIds.add(entry.id)
       if (entry.loaded) return entry
-      const plugin = plugins.find((p) => p.canLoadSync(entry, options))
-      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id} synchronously`)
-      const returnedEntries = plugin.loadSync!(entry, options)
-      const allLoaded = returnedEntries.every((returnedEntry) => {
-        if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
-          throw new Error(
-            `Plugin ${plugin.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
-          )
-        }
-        return returnedEntry.loaded
-      })
-      return allLoaded ? returnedEntries : loadEntriesSync(returnedEntries)
+      const result = plugins.reduce(
+        (result, plugin) => {
+          if (entry.loaded || !plugin.loadSync) return result
+          const returnedEntries = plugin.loadSync(result.entry, options)
+          let preOrPostArray = result.pre
+          returnedEntries.forEach((returnedEntry) => {
+            if (returnedEntry.id === entry.id) {
+              result.entry = returnedEntry
+              preOrPostArray = result.post
+            } else {
+              preOrPostArray.push(returnedEntry)
+            }
+          })
+          return result
+        },
+        { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
+      )
+      return [
+        ...(result.pre.length ? loadEntriesSync(result.pre, loadedIds) : []),
+        result.entry,
+        ...(result.post.length ? loadEntriesSync(result.post, loadedIds) : []),
+      ]
     })
   }
 
-  const loadEntriesAsync = async (entries: Entry[]): Promise<Entry[]> => {
+  const loadEntriesAsync = async (entries: Entry[], loadedIds: Set<string>): Promise<Entry[]> => {
     const promises = entries.map(async (entry) => {
+      if (loadedIds.has(entry.id)) return []
+      loadedIds.add(entry.id)
       if (entry.loaded) return entry
-
-      const canPluginsLoadPromises = plugins.map((p) => p.canLoadAsync(entry, options))
-      const canPluginsLoad = await Promise.all(canPluginsLoadPromises)
-      const pluginIndex = canPluginsLoad.findIndex(Boolean)
-      const plugin = pluginIndex > -1 ? plugins[pluginIndex] : undefined
-      if (!plugin) throw new Error(`No plugin found that can load entry ${entry.id} asynchronously`)
-
-      const returnedEntries = await plugin.loadAsync!(entry, options)
-
-      const allLoaded = returnedEntries.every((returnedEntry) => {
-        // TODO: remove/revamp
-        if (!returnedEntry.loaded && returnedEntry.id === entry.id) {
-          throw new Error(
-            `Plugin ${plugin.name} claimed that it can load entry ${entry.id}, but returned it unloaded`,
-          )
-        }
-        return returnedEntry.loaded
-      })
-
-      return allLoaded ? returnedEntries : loadEntriesAsync(returnedEntries)
+      const result = await plugins.reduce(
+        async (resultPromise, plugin) => {
+          if (entry.loaded || !plugin.loadAsync) return resultPromise
+          const result = await resultPromise
+          const returnedEntries = await plugin.loadAsync(result.entry, options)
+          let preOrPostArray = result.pre
+          returnedEntries.forEach((returnedEntry) => {
+            if (returnedEntry.id === entry.id) {
+              result.entry = returnedEntry
+              preOrPostArray = result.post
+            } else {
+              preOrPostArray.push(returnedEntry)
+            }
+          })
+          return result
+        },
+        Promise.resolve({ pre: [], entry, post: [] } as {
+          pre: Entry[]
+          entry: Entry
+          post: Entry[]
+        }),
+      )
+      return [
+        ...(result.pre.length ? await loadEntriesAsync(result.pre, loadedIds) : []),
+        result.entry,
+        ...(result.post.length ? await loadEntriesAsync(result.post, loadedIds) : []),
+      ]
     })
-    const loadedEntries = await Promise.all(promises)
-    return loadedEntries.flat()
+    const processedEntries = await Promise.all(promises)
+    return processedEntries.flat()
   }
 
-  const mapEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
+  const mapEntriesSync = (
+    entries: Entry[],
+    loadedIds: Set<string>,
+    processedIds: Set<string>,
+  ): Entry[] => {
     return entries.flatMap((entry) => {
-      if (processedIds.includes(entry.id)) return []
+      if (processedIds.has(entry.id)) return []
+      processedIds.add(entry.id)
       const result = plugins.reduce(
         (result, plugin) => {
           if (!plugin.mapSync) return result
@@ -122,18 +148,22 @@ function dozen<
         },
         { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
       )
-      processedIds.push(result.entry.id)
       return [
-        ...(result.pre.length ? processEntriesSync(result.pre, processedIds) : []),
+        ...(result.pre.length ? processEntriesSync(result.pre, loadedIds, processedIds) : []),
         result.entry,
-        ...(result.post.length ? processEntriesSync(result.post, processedIds) : []),
+        ...(result.post.length ? processEntriesSync(result.post, loadedIds, processedIds) : []),
       ]
     })
   }
 
-  const mapEntriesAsync = async (entries: Entry[], processedIds: string[] = []) => {
+  const mapEntriesAsync = async (
+    entries: Entry[],
+    loadedIds: Set<string>,
+    proccessedIds: Set<string>,
+  ) => {
     const promises = entries.map(async (entry) => {
-      if (processedIds.includes(entry.id)) return []
+      if (proccessedIds.has(entry.id)) return []
+      proccessedIds.add(entry.id)
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
           if (!plugin.mapAsync) return resultPromise
@@ -156,28 +186,42 @@ function dozen<
           post: Entry[]
         }),
       )
-      processedIds.push(result.entry.id)
       return [
-        ...(result.pre.length ? await processEntriesAsync(result.pre, processedIds) : []),
+        ...(result.pre.length
+          ? await processEntriesAsync(result.pre, loadedIds, proccessedIds)
+          : []),
         result.entry,
-        ...(result.post.length ? await processEntriesAsync(result.post, processedIds) : []),
+        ...(result.post.length
+          ? await processEntriesAsync(result.post, loadedIds, proccessedIds)
+          : []),
       ]
     })
     const processedEntries = await Promise.all(promises)
     return processedEntries.flat()
   }
 
-  const processEntriesSync = (entries: Entry[], processedIds: string[] = []): Entry[] => {
-    const loadedEntries = loadEntriesSync(entries)
-    return mapEntriesSync(loadedEntries, processedIds)
+  const processEntriesSync = (
+    entries: Entry[],
+    loadedIds = new Set<string>(),
+    processedIds = new Set<string>(),
+  ): Entry[] => {
+    const loadedEntries = loadEntriesSync(entries, loadedIds)
+    const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
+    if (unloadedEntry)
+      throw new Error(`Entry ${unloadedEntry.id} could not be loaded synchronously by any loader`)
+    return mapEntriesSync(loadedEntries, loadedIds, processedIds)
   }
 
   const processEntriesAsync = async (
     entries: Entry[],
-    processedIds: string[] = [],
+    loadedIds = new Set<string>(),
+    processedIds = new Set<string>(),
   ): Promise<Entry[]> => {
-    const loadedEntries = await loadEntriesAsync(entries)
-    return mapEntriesAsync(loadedEntries, processedIds)
+    const loadedEntries = await loadEntriesAsync(entries, loadedIds)
+    const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
+    if (unloadedEntry)
+      throw new Error(`Entry ${unloadedEntry.id} could not be loaded asynchronously by any loader`)
+    return mapEntriesAsync(loadedEntries, loadedIds, processedIds)
   }
 
   const ensureAllEntriesAreProcessedSync = () => {
