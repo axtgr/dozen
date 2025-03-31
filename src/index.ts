@@ -56,10 +56,10 @@ function dozen<
   const processedEntries: Entry[] = []
   let processingPromise = Promise.resolve()
 
-  const loadEntriesSync = (entries: Entry[], loadedIds: Set<string>): Entry[] => {
+  const loadEntriesSync = (entries: Entry[], idsBeingLoaded: Set<string>): Entry[] => {
     return entries.flatMap((entry) => {
-      if (loadedIds.has(entry.id)) return []
-      loadedIds.add(entry.id)
+      if (idsBeingLoaded.has(entry.id)) return []
+      idsBeingLoaded.add(entry.id)
       if (entry.loaded) return entry
       const result = plugins.reduce(
         (result, plugin) => {
@@ -79,17 +79,20 @@ function dozen<
         { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
       )
       return [
-        ...(result.pre.length ? loadEntriesSync(result.pre, loadedIds) : []),
+        ...(result.pre.length ? loadEntriesSync(result.pre, idsBeingLoaded) : []),
         result.entry,
-        ...(result.post.length ? loadEntriesSync(result.post, loadedIds) : []),
+        ...(result.post.length ? loadEntriesSync(result.post, idsBeingLoaded) : []),
       ]
     })
   }
 
-  const loadEntriesAsync = async (entries: Entry[], loadedIds: Set<string>): Promise<Entry[]> => {
+  const loadEntriesAsync = async (
+    entries: Entry[],
+    idsBeingLoaded: Set<string>,
+  ): Promise<Entry[]> => {
     const promises = entries.map(async (entry) => {
-      if (loadedIds.has(entry.id)) return []
-      loadedIds.add(entry.id)
+      if (idsBeingLoaded.has(entry.id)) return []
+      idsBeingLoaded.add(entry.id)
       if (entry.loaded) return entry
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
@@ -114,9 +117,9 @@ function dozen<
         }),
       )
       return [
-        ...(result.pre.length ? await loadEntriesAsync(result.pre, loadedIds) : []),
+        ...(result.pre.length ? await loadEntriesAsync(result.pre, idsBeingLoaded) : []),
         result.entry,
-        ...(result.post.length ? await loadEntriesAsync(result.post, loadedIds) : []),
+        ...(result.post.length ? await loadEntriesAsync(result.post, idsBeingLoaded) : []),
       ]
     })
     const processedEntries = await Promise.all(promises)
@@ -125,12 +128,12 @@ function dozen<
 
   const mapEntriesSync = (
     entries: Entry[],
-    loadedIds: Set<string>,
-    processedIds: Set<string>,
+    idsBeingLoaded: Set<string>,
+    idsBeingProcessed: Set<string>,
   ): Entry[] => {
     return entries.flatMap((entry) => {
-      if (processedIds.has(entry.id)) return []
-      processedIds.add(entry.id)
+      if (idsBeingProcessed.has(entry.id)) return []
+      idsBeingProcessed.add(entry.id)
       const result = plugins.reduce(
         (result, plugin) => {
           if (!plugin.mapSync) return result
@@ -149,21 +152,25 @@ function dozen<
         { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
       )
       return [
-        ...(result.pre.length ? processEntriesSync(result.pre, loadedIds, processedIds) : []),
+        ...(result.pre.length
+          ? processEntriesSync(result.pre, idsBeingLoaded, idsBeingProcessed)
+          : []),
         result.entry,
-        ...(result.post.length ? processEntriesSync(result.post, loadedIds, processedIds) : []),
+        ...(result.post.length
+          ? processEntriesSync(result.post, idsBeingLoaded, idsBeingProcessed)
+          : []),
       ]
     })
   }
 
   const mapEntriesAsync = async (
     entries: Entry[],
-    loadedIds: Set<string>,
-    proccessedIds: Set<string>,
+    idsBeingLoaded: Set<string>,
+    idsBeingProcessed: Set<string>,
   ) => {
     const promises = entries.map(async (entry) => {
-      if (proccessedIds.has(entry.id)) return []
-      proccessedIds.add(entry.id)
+      if (idsBeingProcessed.has(entry.id)) return []
+      idsBeingProcessed.add(entry.id)
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
           if (!plugin.mapAsync) return resultPromise
@@ -188,11 +195,11 @@ function dozen<
       )
       return [
         ...(result.pre.length
-          ? await processEntriesAsync(result.pre, loadedIds, proccessedIds)
+          ? await processEntriesAsync(result.pre, idsBeingLoaded, idsBeingProcessed)
           : []),
         result.entry,
         ...(result.post.length
-          ? await processEntriesAsync(result.post, loadedIds, proccessedIds)
+          ? await processEntriesAsync(result.post, idsBeingLoaded, idsBeingProcessed)
           : []),
       ]
     })
@@ -202,26 +209,26 @@ function dozen<
 
   const processEntriesSync = (
     entries: Entry[],
-    loadedIds = new Set<string>(),
-    processedIds = new Set<string>(),
+    idsBeingLoaded = new Set<string>(),
+    idsBeingProcessed = new Set<string>(),
   ): Entry[] => {
-    const loadedEntries = loadEntriesSync(entries, loadedIds)
+    const loadedEntries = loadEntriesSync(entries, idsBeingLoaded)
     const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
     if (unloadedEntry)
       throw new Error(`Entry ${unloadedEntry.id} could not be loaded synchronously by any loader`)
-    return mapEntriesSync(loadedEntries, loadedIds, processedIds)
+    return mapEntriesSync(loadedEntries, idsBeingLoaded, idsBeingProcessed)
   }
 
   const processEntriesAsync = async (
     entries: Entry[],
-    loadedIds = new Set<string>(),
-    processedIds = new Set<string>(),
+    idsBeingLoaded = new Set<string>(),
+    idsBeingProcessed = new Set<string>(),
   ): Promise<Entry[]> => {
-    const loadedEntries = await loadEntriesAsync(entries, loadedIds)
+    const loadedEntries = await loadEntriesAsync(entries, idsBeingLoaded)
     const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
     if (unloadedEntry)
       throw new Error(`Entry ${unloadedEntry.id} could not be loaded asynchronously by any loader`)
-    return mapEntriesAsync(loadedEntries, loadedIds, processedIds)
+    return mapEntriesAsync(loadedEntries, idsBeingLoaded, idsBeingProcessed)
   }
 
   const ensureAllEntriesAreProcessedSync = () => {
