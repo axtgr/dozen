@@ -7,3 +7,4 @@
 - Smart merging. Implement a reducer that deeply merges configs while concatenating arrays.
 - Keep the order of entries between the processed and unprocessed ones.
 - JSDoc.
+- Separate sync and async modes.
