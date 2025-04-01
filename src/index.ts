@@ -96,11 +96,11 @@ function dozen<
   const mapEntries = async (
     entries: Entry[],
     idsBeingLoaded: Set<string>,
-    idsBeingProcessed: Set<string>,
+    idsBeingMapped: Set<string>,
   ) => {
     const promises = entries.map(async (entry) => {
-      if (idsBeingProcessed.has(entry.id)) return []
-      idsBeingProcessed.add(entry.id)
+      if (idsBeingMapped.has(entry.id)) return []
+      idsBeingMapped.add(entry.id)
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
           if (!plugin.map) return resultPromise
@@ -125,11 +125,11 @@ function dozen<
       )
       return [
         ...(result.pre.length
-          ? await processEntries(result.pre, idsBeingLoaded, idsBeingProcessed)
+          ? await processEntries(result.pre, idsBeingLoaded, idsBeingMapped)
           : []),
         result.entry,
         ...(result.post.length
-          ? await processEntries(result.post, idsBeingLoaded, idsBeingProcessed)
+          ? await processEntries(result.post, idsBeingLoaded, idsBeingMapped)
           : []),
       ]
     })
@@ -140,13 +140,13 @@ function dozen<
   const processEntries = async (
     entries: Entry[],
     idsBeingLoaded = new Set<string>(),
-    idsBeingProcessed = new Set<string>(),
+    idsBeingMapped = new Set<string>(),
   ): Promise<Entry[]> => {
     const loadedEntries = await loadEntries(entries, idsBeingLoaded)
     const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
     if (unloadedEntry)
       throw new Error(`Entry ${unloadedEntry.id} could not be loaded by any plugin`)
-    return mapEntries(loadedEntries, idsBeingLoaded, idsBeingProcessed)
+    return mapEntries(loadedEntries, idsBeingLoaded, idsBeingMapped)
   }
 
   const ensureAllEntriesAreProcessed = async () => {
