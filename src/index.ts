@@ -145,7 +145,7 @@ function dozen<
     const loadedEntries = await loadEntries(entries, idsBeingLoaded)
     const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
     if (unloadedEntry)
-      throw new Error(`Entry ${unloadedEntry.id} could not be loaded asynchronously by any loader`)
+      throw new Error(`Entry ${unloadedEntry.id} could not be loaded by any loader`)
     return mapEntries(loadedEntries, idsBeingLoaded, idsBeingProcessed)
   }
 
