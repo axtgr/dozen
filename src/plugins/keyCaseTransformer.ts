@@ -8,7 +8,7 @@ interface KeyCaseTransformerOptions {
 const keyCaseTransformer: PluginFactory<KeyCaseTransformerOptions> = (options = {}) => {
   return {
     name: 'keyCaseTransformer',
-    transformSync: (config) => {
+    transform: async (config) => {
       const changeCase = options.keyCase && stringCases[options.keyCase]
 
       if (!changeCase) return config

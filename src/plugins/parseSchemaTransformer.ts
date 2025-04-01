@@ -13,7 +13,7 @@ interface ParseSchemaTransformerOptions {
 const parseSchemaTransformer: PluginFactory<ParseSchemaTransformerOptions> = (options) => {
   return {
     name: 'parseSchemaTransformer',
-    transformSync: (config) => {
+    transform: async (config) => {
       if (!isParseableSchema(options.schema)) return config
       try {
         return options.schema.parse(config) as object

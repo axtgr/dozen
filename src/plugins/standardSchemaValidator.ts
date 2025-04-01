@@ -78,15 +78,10 @@ interface StandardSchemaValidatorOptions {
 const standardSchemaValidator: PluginFactory<StandardSchemaValidatorOptions> = () => {
   return {
     name: 'standardSchemaValidator',
-    validateSync: (config, { schema }) => {
+    validate: async (config, { schema }) => {
       if (!schema) return
 
-      const result = schema['~standard'].validate(config)
-
-      if (result instanceof Promise)
-        throw new Error(
-          "The provided standard schema's validate method returned a promise when a sync validation was expected",
-        )
+      const result = await schema['~standard'].validate(config)
 
       if (result.issues) {
         throw new Error(JSON.stringify(result.issues, null, 2))

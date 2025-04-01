@@ -25,14 +25,14 @@ import dozen from 'dozen'
 
 // The simplest case.
 
-// - Synchronously reads from:
+// - Reads from:
 //     1. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
 //     2. Environment variables (process.env)
 // - Coerces strings to numbers and booleans when applicable
 // - Merges into a single object
 // - Converts keys to camelCase
 
-const config = dozen().get()
+const config = await dozen().load()
 ```
 
 ```js
@@ -45,7 +45,7 @@ const dz = dozen({
   // Giving a name makes dozen look for config files with that name
   name: 'myapp',
   // The merged config object will be validated against this schema.
-  // This can be any standard schema, e.g. from Zod, Valibot, Arktype, etc.
+  // This can be any standard schema, e.g. from Zod, Valibot, ArkType, etc.
   schema: z.object({
     host: z.string(),
     port: z.number(),
@@ -62,7 +62,7 @@ dz.add(dozen.argv())
 // It accepts partial config objects as well
 dz.add({ port: 8008 })
 
-// - Asynchronously reads from:
+// - Reads from:
 //     1. The "myapp" field in package.json, myapp.config.json, myapprc.yaml, etc.
 //     2. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
 //     3. Environment variables (process.env)
@@ -74,5 +74,5 @@ dz.add({ port: 8008 })
 // - Converts keys to camelCase
 // - Validates with the schema
 
-const config = await dzn.getAsync()
+const config = await dzn.load()
 ```

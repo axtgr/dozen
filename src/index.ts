@@ -3,7 +3,7 @@ import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
 import type { Entry, Plugin, PluginFactory, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
-import wrapPlugin, { type WrappedPlugin } from './wrapPlugin.ts'
+import wrapPlugin from './wrapPlugin.ts'
 
 function toEntries<TOptions extends object>(
   items:
@@ -51,54 +51,21 @@ function dozen<
     return wrapPlugin(plugin)
   })
 
-  let config: object | undefined
+  let config: object = {}
   let unprocessedEntries: Entry[] = toEntries(options.sources, options)
   const processedEntries: Entry[] = []
   let processingPromise = Promise.resolve()
 
-  const loadEntriesSync = (entries: Entry[], idsBeingLoaded: Set<string>): Entry[] => {
-    return entries.flatMap((entry) => {
-      if (idsBeingLoaded.has(entry.id)) return []
-      idsBeingLoaded.add(entry.id)
-      if (entry.loaded) return entry
-      const result = plugins.reduce(
-        (result, plugin) => {
-          if (entry.loaded || !plugin.loadSync) return result
-          const returnedEntries = plugin.loadSync(result.entry, options)
-          let preOrPostArray = result.pre
-          returnedEntries.forEach((returnedEntry) => {
-            if (returnedEntry.id === entry.id) {
-              result.entry = returnedEntry
-              preOrPostArray = result.post
-            } else {
-              preOrPostArray.push(returnedEntry)
-            }
-          })
-          return result
-        },
-        { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
-      )
-      return [
-        ...(result.pre.length ? loadEntriesSync(result.pre, idsBeingLoaded) : []),
-        result.entry,
-        ...(result.post.length ? loadEntriesSync(result.post, idsBeingLoaded) : []),
-      ]
-    })
-  }
-
-  const loadEntriesAsync = async (
-    entries: Entry[],
-    idsBeingLoaded: Set<string>,
-  ): Promise<Entry[]> => {
+  const loadEntries = async (entries: Entry[], idsBeingLoaded: Set<string>): Promise<Entry[]> => {
     const promises = entries.map(async (entry) => {
       if (idsBeingLoaded.has(entry.id)) return []
       idsBeingLoaded.add(entry.id)
       if (entry.loaded) return entry
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
-          if (entry.loaded || !plugin.loadAsync) return resultPromise
+          if (entry.loaded || !plugin.load) return resultPromise
           const result = await resultPromise
-          const returnedEntries = await plugin.loadAsync(result.entry, options)
+          const returnedEntries = await plugin.load(result.entry, options)
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
@@ -117,53 +84,16 @@ function dozen<
         }),
       )
       return [
-        ...(result.pre.length ? await loadEntriesAsync(result.pre, idsBeingLoaded) : []),
+        ...(result.pre.length ? await loadEntries(result.pre, idsBeingLoaded) : []),
         result.entry,
-        ...(result.post.length ? await loadEntriesAsync(result.post, idsBeingLoaded) : []),
+        ...(result.post.length ? await loadEntries(result.post, idsBeingLoaded) : []),
       ]
     })
     const processedEntries = await Promise.all(promises)
     return processedEntries.flat()
   }
 
-  const mapEntriesSync = (
-    entries: Entry[],
-    idsBeingLoaded: Set<string>,
-    idsBeingProcessed: Set<string>,
-  ): Entry[] => {
-    return entries.flatMap((entry) => {
-      if (idsBeingProcessed.has(entry.id)) return []
-      idsBeingProcessed.add(entry.id)
-      const result = plugins.reduce(
-        (result, plugin) => {
-          if (!plugin.mapSync) return result
-          const returnedEntries = plugin.mapSync(result.entry, options)
-          let preOrPostArray = result.pre
-          returnedEntries.forEach((returnedEntry) => {
-            if (returnedEntry.id === entry.id) {
-              result.entry = returnedEntry
-              preOrPostArray = result.post
-            } else {
-              preOrPostArray.push(returnedEntry)
-            }
-          })
-          return result
-        },
-        { pre: [], entry, post: [] } as { pre: Entry[]; entry: Entry; post: Entry[] },
-      )
-      return [
-        ...(result.pre.length
-          ? processEntriesSync(result.pre, idsBeingLoaded, idsBeingProcessed)
-          : []),
-        result.entry,
-        ...(result.post.length
-          ? processEntriesSync(result.post, idsBeingLoaded, idsBeingProcessed)
-          : []),
-      ]
-    })
-  }
-
-  const mapEntriesAsync = async (
+  const mapEntries = async (
     entries: Entry[],
     idsBeingLoaded: Set<string>,
     idsBeingProcessed: Set<string>,
@@ -173,9 +103,9 @@ function dozen<
       idsBeingProcessed.add(entry.id)
       const result = await plugins.reduce(
         async (resultPromise, plugin) => {
-          if (!plugin.mapAsync) return resultPromise
+          if (!plugin.map) return resultPromise
           const result = await resultPromise
-          const returnedEntries = await plugin.mapAsync(result.entry, options)
+          const returnedEntries = await plugin.map(result.entry, options)
           let preOrPostArray = result.pre
           returnedEntries.forEach((returnedEntry) => {
             if (returnedEntry.id === entry.id) {
@@ -195,11 +125,11 @@ function dozen<
       )
       return [
         ...(result.pre.length
-          ? await processEntriesAsync(result.pre, idsBeingLoaded, idsBeingProcessed)
+          ? await processEntries(result.pre, idsBeingLoaded, idsBeingProcessed)
           : []),
         result.entry,
         ...(result.post.length
-          ? await processEntriesAsync(result.post, idsBeingLoaded, idsBeingProcessed)
+          ? await processEntries(result.post, idsBeingLoaded, idsBeingProcessed)
           : []),
       ]
     })
@@ -207,92 +137,49 @@ function dozen<
     return processedEntries.flat()
   }
 
-  const processEntriesSync = (
-    entries: Entry[],
-    idsBeingLoaded = new Set<string>(),
-    idsBeingProcessed = new Set<string>(),
-  ): Entry[] => {
-    const loadedEntries = loadEntriesSync(entries, idsBeingLoaded)
-    const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
-    if (unloadedEntry)
-      throw new Error(`Entry ${unloadedEntry.id} could not be loaded synchronously by any loader`)
-    return mapEntriesSync(loadedEntries, idsBeingLoaded, idsBeingProcessed)
-  }
-
-  const processEntriesAsync = async (
+  const processEntries = async (
     entries: Entry[],
     idsBeingLoaded = new Set<string>(),
     idsBeingProcessed = new Set<string>(),
   ): Promise<Entry[]> => {
-    const loadedEntries = await loadEntriesAsync(entries, idsBeingLoaded)
+    const loadedEntries = await loadEntries(entries, idsBeingLoaded)
     const unloadedEntry = loadedEntries.find((entry) => !entry.loaded)
     if (unloadedEntry)
       throw new Error(`Entry ${unloadedEntry.id} could not be loaded asynchronously by any loader`)
-    return mapEntriesAsync(loadedEntries, idsBeingLoaded, idsBeingProcessed)
+    return mapEntries(loadedEntries, idsBeingLoaded, idsBeingProcessed)
   }
 
-  const ensureAllEntriesAreProcessedSync = () => {
+  const ensureAllEntriesAreProcessed = async () => {
     if (!unprocessedEntries.length) return false
     const entriesToProcess = unprocessedEntries
     unprocessedEntries = []
-    const newEntries = processEntriesSync(entriesToProcess)
+    const newEntries = await processEntries(entriesToProcess)
     processedEntries.push(...newEntries)
-    ensureAllEntriesAreProcessedSync()
+    await ensureAllEntriesAreProcessed()
     return true
   }
 
-  const ensureAllEntriesAreProcessedAsync = async () => {
-    if (!unprocessedEntries.length) return false
-    const entriesToProcess = unprocessedEntries
-    unprocessedEntries = []
-    const newEntries = await processEntriesAsync(entriesToProcess)
-    processedEntries.push(...newEntries)
-    await ensureAllEntriesAreProcessedAsync()
-    return true
-  }
-
-  const ensureConfigIsReadySync = () => {
-    if (ensureAllEntriesAreProcessedSync()) {
-      config = Object.create(null)
-
-      const reducer = plugins.find((p) => p.reduceSync)
-      if (reducer) {
-        config = processedEntries.reduce((result, entry) => {
-          return reducer?.reduceSync!(result, entry, options) || result
-        }, config!)
-      }
-
-      config = plugins.reduce((result, plugin) => {
-        return plugin.transformSync?.(result!, options) || result
-      }, config)
-
-      plugins.forEach((plugin) => {
-        plugin.validateSync?.(config!, options)
-      })
-    }
-  }
-
-  const ensureConfigIsReadyAsync = async () => {
-    if (await ensureAllEntriesAreProcessedAsync()) {
+  const ensureConfigIsReady = async () => {
+    if (await ensureAllEntriesAreProcessed()) {
       let configPromise = Promise.resolve(Object.create(null))
 
-      const reducer = plugins.find((p) => p.reduceAsync)
+      const reducer = plugins.find((p) => p.reduce)
       if (reducer) {
         configPromise = processedEntries.reduce((configPromise, entry) => {
-          return configPromise.then((config) => reducer.reduceAsync!(config, entry, options))
+          return configPromise.then((config) => reducer.reduce!(config, entry, options))
         }, configPromise)
       }
 
       configPromise = plugins.reduce((configPromise, plugin) => {
-        if (!plugin.transformAsync) return configPromise
-        return configPromise.then((config) => plugin.transformAsync!(config!, options))
+        if (!plugin.transform) return configPromise
+        return configPromise.then((config) => plugin.transform!(config!, options))
       }, configPromise)
 
       const _config = await configPromise
 
       await Promise.all(
         plugins.map((plugin) => {
-          return plugin.validateAsync?.(_config, options)
+          return plugin.validate?.(_config, options)
         }),
       )
 
@@ -302,12 +189,11 @@ function dozen<
 
   const instance = {
     get() {
-      ensureConfigIsReadySync()
       return config
     },
 
-    async getAsync() {
-      processingPromise = processingPromise.then(() => ensureConfigIsReadyAsync())
+    async load() {
+      processingPromise = processingPromise.then(() => ensureConfigIsReady())
       await processingPromise
       return config
     },
@@ -323,10 +209,10 @@ function dozen<
     ) {
       const newEntries = toEntries(items, options)
       unprocessedEntries.push(...newEntries)
-      return this
+      return instance
     },
 
-    fork(forkOptions: DozenOptions<TSources, TPlugins>) {
+    fork(forkOptions?: DozenOptions<TSources, TPlugins>) {
       const mergedOptions = {
         ...options,
         sources: [fork(instance), ...(forkOptions?.sources || [])],
@@ -338,5 +224,7 @@ function dozen<
   return instance
 }
 
+type DozenInstance = ReturnType<typeof dozen>
+
 export default dozen
-export type { UnionToIntersection, ExtractOptions, DozenOptions }
+export type { UnionToIntersection, ExtractOptions, DozenOptions, DozenInstance }

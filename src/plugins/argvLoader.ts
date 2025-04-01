@@ -10,7 +10,7 @@ type ArgvLoaderOptions = object
 const argvLoader: PluginFactory<ArgvLoaderOptions> = () => {
   return {
     name: 'argvLoader',
-    loadSync: (entry) => {
+    load: async (entry) => {
       if (!canLoadEntry(entry)) return entry
       const { values } = parseArgs({
         args: entry.value as string[],

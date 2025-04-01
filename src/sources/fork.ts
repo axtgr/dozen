@@ -1,11 +1,11 @@
-import type Dozen from '../index.ts'
+import type { DozenInstance } from '../index.ts'
 import type { Source } from '../types.ts'
 
 type ForkSourceOptions = object
 
 let id = 0
 
-function fork(parentDozen: ReturnType<typeof Dozen>): Source {
+function fork(parentDozen: DozenInstance): Source {
   return () => [
     {
       id: `fork-${id++}`,

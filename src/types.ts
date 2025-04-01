@@ -14,28 +14,17 @@ type Source<TOptions extends object = object> = (options: TOptions) => Entry[]
 
 interface Plugin<TOptions extends object = object> {
   name: string
-  loadSync?: (
-    entry: Entry,
-    options: TOptions,
-  ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
-  loadAsync?: (
+  load?: (
     entry: Entry,
     options: TOptions,
   ) => Promise<undefined | null | false | Entry | (undefined | null | false | Entry)[]>
-  mapSync?: (
-    entry: Entry,
-    options: TOptions,
-  ) => undefined | null | false | Entry | (undefined | null | false | Entry)[]
-  mapAsync?: (
+  map?: (
     entry: Entry,
     options: TOptions,
   ) => Promise<undefined | null | false | Entry | (undefined | null | false | Entry)[]>
-  reduceSync?: (config: object, entry: Entry, options: TOptions) => object
-  reduceAsync?: (config: object, entry: Entry, options: TOptions) => Promise<object>
-  transformSync?: (config: object, options: TOptions) => object
-  transformAsync?: (config: object, options: TOptions) => Promise<object>
-  validateSync?: (config: object, options: TOptions) => void
-  validateAsync?: (config: object, options: TOptions) => Promise<void>
+  reduce?: (config: object, entry: Entry, options: TOptions) => Promise<object>
+  transform?: (config: object, options: TOptions) => Promise<object>
+  validate?: (config: object, options: TOptions) => Promise<void>
 }
 
 type PluginFactory<TOptions extends object = object> = (options: TOptions) => Plugin<TOptions>

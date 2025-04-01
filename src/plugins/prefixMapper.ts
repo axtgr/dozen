@@ -12,7 +12,7 @@ interface PrefixMapperOptions {
 const prefixMapper: PluginFactory<PrefixMapperOptions> = (options) => {
   return {
     name: 'prefixMapper',
-    mapSync: (entry) => {
+    map: async (entry) => {
       if (!options.prefix) return entry
 
       let { filter, remove } = options.prefix

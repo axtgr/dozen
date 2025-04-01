@@ -16,7 +16,7 @@ type CoerceStringsMapperOptions = {
 const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = (options = {}) => {
   return {
     name: 'coerceStringsMapper',
-    mapSync: (entry) => {
+    map: async (entry) => {
       if (!options.coerceStrings) return entry
 
       let coerceTo: CoerceTo

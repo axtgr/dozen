@@ -1,10 +1,10 @@
-import type Dozen from '../index.ts'
+import type { DozenInstance } from '../index.ts'
 import type { Entry, PluginFactory } from '../types.ts'
 
 function canLoadEntry(entry: Entry) {
   return (
     entry.tags?.includes('fork') &&
-    typeof (entry?.value as ReturnType<typeof Dozen> | undefined)?.get === 'function'
+    typeof (entry?.value as DozenInstance | undefined)?.load === 'function'
   )
 }
 
@@ -13,20 +13,12 @@ type ForkLoaderOptions = object
 const forkLoader: PluginFactory<ForkLoaderOptions> = () => {
   return {
     name: 'forkLoader',
-    loadSync: (entry) => {
+    load: async (entry) => {
       if (!canLoadEntry(entry)) return entry
       return {
         id: entry.id,
         loaded: true,
-        value: (entry.value as ReturnType<typeof Dozen>).get(),
-      }
-    },
-    loadAsync: async (entry) => {
-      if (!canLoadEntry(entry)) return entry
-      return {
-        id: entry.id,
-        loaded: true,
-        value: (entry.value as ReturnType<typeof Dozen>).getAsync(),
+        value: await (entry.value as DozenInstance).load(),
       }
     },
   }
