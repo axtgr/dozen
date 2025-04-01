@@ -6,8 +6,8 @@ interface Entry {
   id: string
   parentId?: string
   value?: unknown
-  loaded?: boolean
   tags?: string[]
+  status?: 'pending' | 'loading' | 'loaded' | 'mapping' | 'mapped'
 }
 
 type Source<TOptions extends object = object> = (options: TOptions) => Entry[]

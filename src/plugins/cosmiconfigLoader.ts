@@ -16,17 +16,13 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
   return {
     name: 'cosmiconfigLoader',
     load: async (entry) => {
-      if (!canLoadEntry(entry)) return entry
+      if (!canLoadEntry(entry)) return
       const isConfigFile = entry.tags?.includes('configFile')
       const explorer = cosmiconfig(isConfigFile ? (entry.value as string) : '')
       const result = await (isConfigFile ? explorer.search() : explorer.load(entry.value as string))
-      return [
-        {
-          ...entry,
-          loaded: true,
-          value: result?.config || {},
-        },
-      ]
+      entry.status = 'loaded'
+      entry.value = result?.config || {}
+      return entry
     },
   }
 }

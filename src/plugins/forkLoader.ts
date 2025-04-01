@@ -14,12 +14,10 @@ const forkLoader: PluginFactory<ForkLoaderOptions> = () => {
   return {
     name: 'forkLoader',
     load: async (entry) => {
-      if (!canLoadEntry(entry)) return entry
-      return {
-        id: entry.id,
-        loaded: true,
-        value: await (entry.value as DozenInstance).load(),
-      }
+      if (!canLoadEntry(entry)) return
+      entry.status = 'loaded'
+      entry.value = await (entry.value as DozenInstance).load()
+      return entry
     },
   }
 }

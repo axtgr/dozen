@@ -82,10 +82,8 @@ const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = (options 
         Object.create(null) as Record<string, unknown>,
       )
 
-      return {
-        ...entry,
-        value,
-      }
+      entry.value = value
+      return entry
     },
   }
 }

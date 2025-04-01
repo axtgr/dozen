@@ -11,19 +11,14 @@ const argvLoader: PluginFactory<ArgvLoaderOptions> = () => {
   return {
     name: 'argvLoader',
     load: async (entry) => {
-      if (!canLoadEntry(entry)) return entry
+      if (!canLoadEntry(entry)) return
       const { values } = parseArgs({
         args: entry.value as string[],
         strict: false,
         allowNegative: true,
       })
-      return [
-        {
-          ...entry,
-          loaded: true,
-          value: values,
-        },
-      ]
+      entry.value = values
+      return entry
     },
   }
 }

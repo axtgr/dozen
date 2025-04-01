@@ -40,10 +40,8 @@ const prefixMapper: PluginFactory<PrefixMapperOptions> = (options) => {
         Object.create(null) as Record<string, unknown>,
       )
 
-      return {
-        ...entry,
-        value,
-      }
+      entry.value = value
+      return entry
     },
   }
 }

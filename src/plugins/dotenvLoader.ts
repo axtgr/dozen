@@ -11,7 +11,7 @@ const dotenvLoader: PluginFactory<DotenvLoaderOptions> = () => {
   return {
     name: 'dotenvLoader',
     load: async (entry) => {
-      if (!canLoadEntry(entry)) return entry
+      if (!canLoadEntry(entry)) return
       const { error, parsed } = dotenv.config({
         path: entry.value as string | string[],
         processEnv: {},
@@ -19,13 +19,9 @@ const dotenvLoader: PluginFactory<DotenvLoaderOptions> = () => {
       if (error && (error as any).code !== 'ENOENT') {
         throw error
       }
-      return [
-        {
-          ...entry,
-          loaded: true,
-          value: parsed,
-        },
-      ]
+      entry.status = 'loaded'
+      entry.value = parsed
+      return entry
     },
   }
 }
