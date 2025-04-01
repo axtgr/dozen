@@ -5,5 +5,6 @@
 - Watching for changes.
 - React integration.
 - Smart merging. Implement a reducer that deeply merges configs while concatenating arrays.
-- Keep the order of entries between the processed and unprocessed ones.
+- Make sure the order of entries between the processed and unprocessed ones is preserved.
 - JSDoc.
+- If a parent entry changes its order, should the child entries be reordered as well?
