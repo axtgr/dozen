@@ -48,16 +48,26 @@ function dozenForNode<
       ]
     >,
     'sources' | 'plugins'
-  > &
-    Partial<UnionToIntersection<ExtractOptions<TSources[number]>>> &
+  > & {
+    disablePlugins?: (PluginFactory | Plugin | undefined | null | false)[]
+    disableSources?: (Source | Entry | Entry[] | undefined | null | false)[]
+  } & Partial<UnionToIntersection<ExtractOptions<TSources[number]>>> &
     Partial<UnionToIntersection<ExtractOptions<TPlugins[number]>>> & {
       sources?: TSources
       plugins?: TPlugins
     },
 ) {
   const name = options?.name
-  const sources = [configFile(), dotenv(), env(), ...(options?.sources || [])]
-  const plugins = [
+
+  let sources = [configFile(), dotenv(), env(), ...(options?.sources || [])]
+
+  if (options?.disableSources) {
+    sources = sources.filter((source) => {
+      return !options.disableSources!.some((disabledSource) => disabledSource === source)
+    })
+  }
+
+  let plugins = [
     cosmiconfigLoader,
     dotenvLoader,
     argvLoader,
@@ -70,6 +80,13 @@ function dozenForNode<
     standardSchemaValidator,
     ...(options?.plugins || []),
   ]
+
+  if (options?.disablePlugins) {
+    plugins = plugins.filter((plugin) => {
+      return !options.disablePlugins!.some((disabledPlugin) => disabledPlugin === plugin)
+    })
+  }
+
   return dozen({
     prefix: name
       ? {
