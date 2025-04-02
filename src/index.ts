@@ -169,6 +169,7 @@ function dozen<
 
     if (gotNewEntries) {
       await loadEntries()
+      await mapEntries()
     }
   }
 
