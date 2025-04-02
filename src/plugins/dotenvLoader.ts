@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 import type { Entry, PluginFactory } from '../types.ts'
 
 function canLoadEntry(entry: Entry) {
-  return entry.tags?.includes('file') && entry.tags.includes('env')
+  return entry.format?.includes('file') && entry.format.includes('env')
 }
 
 type DotenvLoaderOptions = object

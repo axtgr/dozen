@@ -6,7 +6,7 @@ function file(path: string): Source {
   return () => [
     {
       id: `file-${path}`,
-      tags: ['file'],
+      format: ['file'],
       value: path,
     },
   ]

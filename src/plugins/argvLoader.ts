@@ -2,7 +2,7 @@ import { parseArgs } from 'node:util'
 import type { Entry, PluginFactory } from '../types.ts'
 
 function canLoadEntry(entry: Entry) {
-  return entry.tags?.includes('argv') && (!entry.value || Array.isArray(entry.value))
+  return entry.format?.includes('argv') && (!entry.value || Array.isArray(entry.value))
 }
 
 type ArgvLoaderOptions = object

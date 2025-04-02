@@ -8,7 +8,7 @@ function argv(options?: ArgvSourceOptions): Source {
   return () => [
     {
       id: 'argv',
-      tags: ['argv'],
+      format: ['argv'],
       value: options?.args,
     },
   ]

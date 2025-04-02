@@ -73,7 +73,7 @@ function dozenForNode<
     plugins,
     prefix: name
       ? {
-          byTag: {
+          byFormat: {
             env: {
               filter: `${name.toUpperCase()}_`,
               remove: `${name.toUpperCase()}_`,
@@ -83,7 +83,7 @@ function dozenForNode<
       : undefined,
     keyCase: 'camel',
     coerceStrings: {
-      byTag: {
+      byFormat: {
         env: true,
         argv: true,
       },

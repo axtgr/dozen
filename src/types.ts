@@ -6,7 +6,7 @@ interface Entry {
   id: string
   parentId?: string
   value?: unknown
-  tags?: string[]
+  format?: string[]
   status?: 'pending' | 'loading' | 'loaded' | 'mapping' | 'mapped'
   meta?: Record<string, unknown>
 }

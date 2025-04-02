@@ -6,7 +6,7 @@ function env(): Source {
   return () => [
     {
       id: 'process.env',
-      tags: ['env', 'object'],
+      format: ['env', 'object'],
       status: 'loaded',
       value: process.env,
     },

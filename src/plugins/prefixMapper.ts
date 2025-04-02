@@ -5,7 +5,7 @@ interface PrefixMapperOptions {
   prefix?: {
     filter?: boolean | string
     remove?: boolean | string
-    byTag?: Record<string, { filter?: boolean; remove?: boolean }>
+    byFormat?: Record<string, { filter?: boolean; remove?: boolean }>
   }
 }
 
@@ -17,11 +17,11 @@ const prefixMapper: PluginFactory<PrefixMapperOptions> = (options) => {
 
       let { filter, remove } = options.prefix
 
-      if (options.prefix.byTag && entry.tags?.length) {
-        entry.tags.forEach((tag) => {
-          const tagOptions = options.prefix!.byTag![tag] || {}
-          if ('filter' in tagOptions) filter = tagOptions.filter
-          if ('remove' in tagOptions) remove = tagOptions.remove
+      if (options.prefix.byFormat && entry.format?.length) {
+        entry.format.forEach((format) => {
+          const formatOptions = options.prefix!.byFormat![format] || {}
+          if ('filter' in formatOptions) filter = formatOptions.filter
+          if ('remove' in formatOptions) remove = formatOptions.remove
         })
       }
 

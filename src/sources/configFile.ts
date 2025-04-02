@@ -9,7 +9,7 @@ function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceO
     return [
       {
         id: 'configFile',
-        tags: ['configFile'],
+        format: ['configFile'],
         value: options?.name || _options.name,
       },
     ]

@@ -20,7 +20,7 @@ const extendsMapper: PluginFactory<ExtendsMapperOptions> = (options) => {
 
       const basePath = typeof entry.meta?.filePath === 'string' ? entry.meta?.filePath : undefined
       const value = basePath ? Path.resolve(basePath, extend) : extend
-      const newEntry = { id: value, tags: ['file'], value }
+      const newEntry = { id: value, format: ['file'], value }
 
       delete (entry.value as any)[options.extendsProperty]
 

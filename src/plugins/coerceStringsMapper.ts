@@ -9,7 +9,7 @@ type CoerceStringsMapperOptions = {
   coerceStrings?:
     | boolean
     | (CoerceTo & {
-        byTag?: boolean | Record<string, CoerceTo>
+        byFormat?: boolean | Record<string, CoerceTo>
       })
 }
 
@@ -32,16 +32,17 @@ const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = (options 
           number: options.coerceStrings.number,
         }
 
-        if (options.coerceStrings.byTag) {
-          entry.tags?.forEach((tag) => {
-            const tagOptions: CoerceTo | boolean = (options.coerceStrings as any).byTag[tag] || {}
-            if (typeof tagOptions === 'boolean') {
-              coerceTo.boolean = tagOptions
-              coerceTo.number = tagOptions
-            } else if (typeof tagOptions.boolean !== 'undefined') {
-              coerceTo.boolean = tagOptions.boolean
-            } else if (typeof tagOptions.number !== 'undefined') {
-              coerceTo.number = tagOptions.number
+        if (options.coerceStrings.byFormat) {
+          entry.format?.forEach((format) => {
+            const formatOptions: CoerceTo | boolean =
+              (options.coerceStrings as any).byFormat[format] || {}
+            if (typeof formatOptions === 'boolean') {
+              coerceTo.boolean = formatOptions
+              coerceTo.number = formatOptions
+            } else if (typeof formatOptions.boolean !== 'undefined') {
+              coerceTo.boolean = formatOptions.boolean
+            } else if (typeof formatOptions.number !== 'undefined') {
+              coerceTo.number = formatOptions.number
             }
           })
         }

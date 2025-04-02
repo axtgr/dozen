@@ -3,7 +3,7 @@ import type { Entry, PluginFactory } from '../types.ts'
 
 function canLoadEntry(entry: Entry) {
   return (
-    entry.tags?.includes('fork') &&
+    entry.format?.includes('fork') &&
     typeof (entry?.value as DozenInstance | undefined)?.load === 'function'
   )
 }

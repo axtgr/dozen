@@ -9,7 +9,7 @@ function fork(parentDozen: DozenInstance): Source {
   return () => [
     {
       id: `fork-${id++}`,
-      tags: ['fork'],
+      format: ['fork'],
       value: parentDozen,
     },
   ]
