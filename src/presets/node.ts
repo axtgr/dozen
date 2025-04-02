@@ -9,6 +9,7 @@ import coerceStringsMapper, {
   type CoerceStringsMapperOptions,
 } from '../plugins/coerceStringsMapper.ts'
 import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from '../plugins/cosmiconfigLoader.ts'
+import deepReducer from '../plugins/deepReducer.ts'
 import dotenvLoader, { type DotenvLoaderOptions } from '../plugins/dotenvLoader.ts'
 import extendsMapper, { type ExtendsMapperOptions } from '../plugins/extendsMapper.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
@@ -98,5 +99,7 @@ dozenForNode.env = env
 dozenForNode.dotenv = dotenv
 dozenForNode.argv = argv
 dozenForNode.file = file
+dozenForNode.assignReducer = assignReducer
+dozenForNode.deepReducer = deepReducer
 
 export default dozenForNode
