@@ -179,7 +179,7 @@ function dozen<
 
     let configPromise = Promise.resolve(Object.create(null))
 
-    const reducer = plugins.find((p) => p.reduce)
+    const reducer = plugins.findLast((p) => p.reduce)
     if (reducer) {
       configPromise = entries.reduce((configPromise, entry) => {
         if (entry.status !== 'mapped') {
