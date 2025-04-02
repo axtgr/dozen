@@ -8,3 +8,4 @@
 - Make sure the order of entries between the processed and unprocessed ones is preserved.
 - JSDoc.
 - If a parent entry changes its order, should the child entries be reordered as well?
+- Use a meta object instead of tags.
