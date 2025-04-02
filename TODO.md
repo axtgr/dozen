@@ -2,6 +2,5 @@
 - Error handling.
 - Watching for changes.
 - React integration.
-- Smart merging. Implement a reducer that deeply merges configs while concatenating arrays.
 - JSDoc.
 - If a parent entry changes its order, should the child entries be reordered as well?
