@@ -111,6 +111,7 @@ function dozen<
             if (!returnedEntry.status) {
               returnedEntry.status = 'pending'
             }
+            returnedEntry.parentId = entry.id
             spliceEntry(returnedEntry, true, entry.status !== 'loaded')
             gotNewEntries = true
           }
@@ -148,6 +149,7 @@ function dozen<
             if (!returnedEntry.status) {
               returnedEntry.status = 'pending'
             }
+            returnedEntry.parentId = entry.id
             spliceEntry(returnedEntry, true, entry.status !== 'loaded')
             gotNewEntries = true
           }
