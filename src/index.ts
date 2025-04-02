@@ -41,6 +41,21 @@ function dozen<
   let entriesUpdated = false
   let promise = Promise.resolve()
 
+  const removeSubtree = (entryId: string, removeItself = true) => {
+    if (removeItself) {
+      const index = entries.findIndex((entry) => entry.id === entryId)
+      if (index !== -1) {
+        entries.splice(index, 1)
+        entriesUpdated = true
+      }
+    }
+    entries
+      .filter((entry) => entry.parentId === entryId)
+      .forEach((entry) => {
+        removeSubtree(entry.parentId!, true)
+      })
+  }
+
   const spliceEntry = (entry: Entry, replaceSelf: boolean, putBeforeParent: boolean) => {
     const selfIndex = entries.findIndex((e) => e.id === entry.id)
     let parentIndex = entry.parentId ? entries.findIndex((e) => e.id === entry.parentId) : -1
@@ -62,6 +77,12 @@ function dozen<
       } else {
         entries.splice(parentIndex + 1, 0, entry)
       }
+    }
+
+    // A pending entry means it's going to be loaded and mapped producing a new set
+    // of child entries, so we remove the existing children.
+    if (entry.status === 'pending') {
+      removeSubtree(entry.id, false)
     }
 
     entriesUpdated = true
