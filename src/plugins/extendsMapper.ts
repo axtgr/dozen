@@ -7,7 +7,7 @@ interface ExtendsMapperOptions {
 
 const extendsMapper: PluginFactory<ExtendsMapperOptions> = (options) => {
   return {
-    name: 'extendsMapper',
+    name: 'default:extendsMapper',
     map: async (entry) => {
       if (!options.extendsProperty || !entry.value || typeof entry.value !== 'object') return entry
 

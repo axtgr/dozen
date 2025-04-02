@@ -11,7 +11,7 @@ interface PrefixMapperOptions {
 
 const prefixMapper: PluginFactory<PrefixMapperOptions> = (options) => {
   return {
-    name: 'prefixMapper',
+    name: 'default:prefixMapper',
     map: async (entry) => {
       if (!options.prefix) return entry
 

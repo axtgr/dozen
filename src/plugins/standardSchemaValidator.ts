@@ -77,7 +77,7 @@ interface StandardSchemaValidatorOptions {
 
 const standardSchemaValidator: PluginFactory<StandardSchemaValidatorOptions> = () => {
   return {
-    name: 'standardSchemaValidator',
+    name: 'default:standardSchemaValidator',
     validate: async (config, { schema }) => {
       if (!schema) return
 

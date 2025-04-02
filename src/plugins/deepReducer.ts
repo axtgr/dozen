@@ -6,7 +6,7 @@ type DeepReducerOptions = object
 const deepReducer: PluginFactory<DeepReducerOptions> = () => {
   const merger = deepmerge()
   return {
-    name: 'assignReducer',
+    name: 'default:assignReducer',
     reduce: async (config, entry) => merger(config, entry.value) as object,
   }
 }

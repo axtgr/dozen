@@ -14,7 +14,7 @@ interface CosmiconfigLoaderOptions {
 
 const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
   return {
-    name: 'cosmiconfigLoader',
+    name: 'default:cosmiconfigLoader',
     load: async (entry) => {
       if (!canLoadEntry(entry)) return
       const isConfigFile = entry.format?.includes('configFile')

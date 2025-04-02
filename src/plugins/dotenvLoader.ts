@@ -9,7 +9,7 @@ type DotenvLoaderOptions = object
 
 const dotenvLoader: PluginFactory<DotenvLoaderOptions> = () => {
   return {
-    name: 'dotenvLoader',
+    name: 'default:dotenvLoader',
     load: async (entry) => {
       if (!canLoadEntry(entry)) return
       const { error, parsed } = dotenv.config({

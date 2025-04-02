@@ -8,7 +8,7 @@ interface KeyCaseMapperOptions {
 const keyCaseMapper: PluginFactory<KeyCaseMapperOptions> = (options = {}) => {
   const changeCase = options.keyCase && stringCases[options.keyCase]
   return {
-    name: 'keyCaseMapper',
+    name: 'default:keyCaseMapper',
     map: async (entry) => {
       if (!changeCase || !entry.value || typeof entry.value !== 'object') return entry
       entry.value = Object.entries(entry.value).reduce(

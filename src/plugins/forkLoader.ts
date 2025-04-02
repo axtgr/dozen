@@ -12,7 +12,7 @@ type ForkLoaderOptions = object
 
 const forkLoader: PluginFactory<ForkLoaderOptions> = () => {
   return {
-    name: 'forkLoader',
+    name: 'default:forkLoader',
     load: async (entry) => {
       if (!canLoadEntry(entry)) return
       entry.status = 'loaded'
