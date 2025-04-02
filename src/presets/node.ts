@@ -56,7 +56,7 @@ function dozenForNode<
     },
 ) {
   const name = options?.name
-  const sources = [configFile(), dotenv(), env()]
+  const sources = [configFile(), dotenv(), env(), ...(options?.sources || [])]
   const plugins = [
     cosmiconfigLoader,
     dotenvLoader,
@@ -68,10 +68,9 @@ function dozenForNode<
     assignReducer,
     parseSchemaTransformer,
     standardSchemaValidator,
+    ...(options?.plugins || []),
   ]
   return dozen({
-    sources,
-    plugins,
     prefix: name
       ? {
           byFormat: {
@@ -91,7 +90,9 @@ function dozenForNode<
     },
     extendsProperty: 'extends',
     ...options,
-  } as DozenOptions<typeof sources, typeof plugins>)
+    sources,
+    plugins,
+  } as unknown as DozenOptions<typeof sources, typeof plugins>)
 }
 
 dozenForNode.configFile = configFile
