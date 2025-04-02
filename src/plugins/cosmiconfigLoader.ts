@@ -22,6 +22,10 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
       const result = await (isConfigFile ? explorer.search() : explorer.load(entry.value as string))
       entry.status = 'loaded'
       entry.value = result?.config || {}
+      if (result) {
+        entry.meta ??= {}
+        entry.meta.filePath = result.filepath
+      }
       return entry
     },
   }

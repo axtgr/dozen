@@ -8,6 +8,7 @@ interface Entry {
   value?: unknown
   tags?: string[]
   status?: 'pending' | 'loading' | 'loaded' | 'mapping' | 'mapped'
+  meta?: Record<string, unknown>
 }
 
 type Source<TOptions extends object = object> = (options: TOptions) => Entry[]
