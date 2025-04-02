@@ -10,9 +10,7 @@ import coerceStringsMapper, {
 } from '../plugins/coerceStringsMapper.ts'
 import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from '../plugins/cosmiconfigLoader.ts'
 import dotenvLoader, { type DotenvLoaderOptions } from '../plugins/dotenvLoader.ts'
-import keyCaseTransformer, {
-  type KeyCaseTransformerOptions,
-} from '../plugins/keyCaseTransformer.ts'
+import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
 import parseSchemaTransformer, {
   type ParseSchemaTransformerOptions,
 } from '../plugins/parseSchemaTransformer.ts'
@@ -40,8 +38,8 @@ function dozenForNode<
         Plugin<ArgvLoaderOptions>,
         Plugin<PrefixMapperOptions>,
         Plugin<CoerceStringsMapperOptions>,
+        Plugin<KeyCaseMapperOptions>,
         Plugin<AssignReducerOptions>,
-        Plugin<KeyCaseTransformerOptions>,
         Plugin<ParseSchemaTransformerOptions>,
         Plugin<StandardSchemaValidatorOptions>,
       ]
@@ -62,8 +60,8 @@ function dozenForNode<
     argvLoader,
     prefixMapper,
     coerceStringsMapper,
+    keyCaseMapper,
     assignReducer,
-    keyCaseTransformer,
     parseSchemaTransformer,
     standardSchemaValidator,
   ]
