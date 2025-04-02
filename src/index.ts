@@ -52,7 +52,7 @@ function dozen<
     entries
       .filter((entry) => entry.parentId === entryId)
       .forEach((entry) => {
-        removeSubtree(entry.parentId!, true)
+        removeSubtree(entry.id!, true)
       })
   }
 
@@ -70,7 +70,9 @@ function dozen<
         entries.push(entry)
       }
     } else {
-      entries.splice(selfIndex, 1)
+      if (selfIndex !== -1) {
+        entries.splice(selfIndex, 1)
+      }
       parentIndex += selfIndex === -1 || selfIndex > parentIndex || !replaceSelf ? 0 : -1
       if (putBeforeParent) {
         entries.splice(parentIndex, 0, entry)
