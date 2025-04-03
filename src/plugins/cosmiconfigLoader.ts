@@ -2,6 +2,48 @@ import { FSWatcher } from 'chokidar'
 import { cosmiconfig } from 'cosmiconfig'
 import type { Entry, PluginFactory } from '../types.ts'
 
+function createWatcher() {
+  const watchedEntries = new Map<string, Entry>()
+  const watchCbs = new Set<(entry: Entry) => void>()
+  let chokidar: FSWatcher | undefined
+
+  const onChange = (_eventName: string, filePath: string) => {
+    if (watchedEntries.has(filePath)) {
+      const entry = watchedEntries.get(filePath)!
+      entry.status = 'pending'
+      watchCbs.forEach((cb) => cb(entry))
+    } else {
+      chokidar?.unwatch(filePath)
+    }
+  }
+
+  return {
+    add(filePath: string, entry: Entry) {
+      chokidar?.add(filePath)
+      watchedEntries.set(filePath, entry)
+    },
+    async watch(cb: (entry: Entry) => void) {
+      watchCbs.add(cb)
+      if (watchCbs.size === 1) {
+        chokidar = new FSWatcher({
+          ignoreInitial: true,
+        })
+        chokidar.on('all', onChange)
+        watchedEntries.keys().forEach((filePath) => chokidar!.add(filePath))
+      }
+    },
+    async unwatch(cb: (entry: Entry) => void) {
+      watchCbs.delete(cb)
+      if (!watchCbs.size) {
+        await chokidar?.close()
+        chokidar = undefined
+        return false
+      }
+      return true
+    },
+  }
+}
+
 function canLoadEntry(entry: Entry) {
   return (
     typeof entry.value === 'string' &&
@@ -14,21 +56,7 @@ interface CosmiconfigLoaderOptions {
 }
 
 const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
-  const watcher = new FSWatcher({
-    ignoreInitial: true,
-  })
-  const watchedEntries = new Map<string, Entry>()
-  const watchCbs = new Set<(entry: Entry) => void>()
-
-  watcher.on('all', (_event, filePath) => {
-    if (watchedEntries.has(filePath)) {
-      const entry = watchedEntries.get(filePath)!
-      entry.status = 'pending'
-      watchCbs.forEach((cb) => cb(entry))
-    } else {
-      watcher.unwatch(filePath)
-    }
-  })
+  const watcher = createWatcher()
 
   return {
     name: 'default:cosmiconfigLoader',
@@ -46,20 +74,15 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
       if (result) {
         newEntry.meta ??= {}
         newEntry.meta.filePath = result.filepath
-        watcher?.add(result.filepath)
-        watchedEntries.set(result.filepath, entry)
+        watcher.add(result.filepath, newEntry)
       }
       return newEntry
     },
     watch: async (cb) => {
-      watchCbs.add(cb)
+      watcher.watch(cb)
     },
     unwatch: async (cb) => {
-      watchCbs.delete(cb)
-      if (!watchCbs.size) {
-        watchedEntries.clear()
-        await watcher.close()
-      }
+      await watcher.unwatch(cb)
     },
   }
 }
