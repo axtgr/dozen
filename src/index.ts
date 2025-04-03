@@ -41,9 +41,12 @@ function dozen<
   let config: object = {}
   let entriesUpdated = false
   let promise = Promise.resolve()
-  let watchStream:
-    | (TransformStream<Entry, object> & { writer: WritableStreamDefaultWriter<Entry> })
-    | undefined
+
+  const watchCbs = new Set<(config: object) => void>()
+  const watchCbForPlugins = (entry: Entry) => {
+    spliceEntry(entry, true, false)
+    process()
+  }
 
   const removeSubtree = (entryId: string, removeItself = true) => {
     if (removeItself) {
@@ -179,7 +182,7 @@ function dozen<
 
   const processConfig = async () => {
     if (!entriesUpdated) return
-    entriesUpdated = true
+    entriesUpdated = false
 
     let configPromise = Promise.resolve(Object.create(null))
 
@@ -207,6 +210,7 @@ function dozen<
     )
 
     config = _config
+    watchCbs.forEach((cb) => cb(config))
   }
 
   const process = async () => {
@@ -258,31 +262,24 @@ function dozen<
       return dozen(mergedOptions)
     },
 
-    watch() {
-      if (!watchStream) {
-        watchStream = new TransformStream<Entry, object>({
-          async transform(entry, controller) {
-            spliceEntry(entry, true, false)
-            await instance.load()
-            controller.enqueue(config)
-          },
-        }) as any
-        watchStream!.writer = watchStream!.writable.getWriter()
-
-        plugins.forEach((plugin) => {
-          plugin.watch?.((entry) => watchStream?.writer.write(entry), options)
-        })
+    watch(cb?: (config: object) => void) {
+      cb ??= () => {}
+      watchCbs.add(cb)
+      if (watchCbs.size === 1) {
+        plugins.forEach((plugin) => plugin.watch?.(watchCbForPlugins, options))
       }
-
-      return watchStream!.readable
+      return () => instance.unwatch(cb)
     },
 
-    unwatch() {
-      watchStream?.writer?.close()
-      watchStream = undefined
-      plugins.forEach((plugin) => {
-        plugin.unwatch?.(options)
-      })
+    unwatch(cb?: (config: object) => void) {
+      if (cb) {
+        watchCbs.delete(cb)
+      } else {
+        watchCbs.clear()
+      }
+      if (!watchCbs.size) {
+        plugins.forEach((plugin) => plugin.unwatch?.(watchCbForPlugins, options))
+      }
     },
   }
 
