@@ -1,4 +1,5 @@
-import { cosmiconfig, cosmiconfigSync } from 'cosmiconfig'
+import { FSWatcher } from 'chokidar'
+import { cosmiconfig } from 'cosmiconfig'
 import type { Entry, PluginFactory } from '../types.ts'
 
 function canLoadEntry(entry: Entry) {
@@ -13,6 +14,22 @@ interface CosmiconfigLoaderOptions {
 }
 
 const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
+  const watcher = new FSWatcher({
+    ignoreInitial: true,
+  })
+  const watchedEntries = new Map<string, Entry>()
+  const watchCbs = new Set<(entry: Entry) => void>()
+
+  watcher.on('all', (_event, filePath) => {
+    if (watchedEntries.has(filePath)) {
+      const entry = watchedEntries.get(filePath)!
+      entry.status = 'pending'
+      watchCbs.forEach((cb) => cb(entry))
+    } else {
+      watcher.unwatch(filePath)
+    }
+  })
+
   return {
     name: 'default:cosmiconfigLoader',
     load: async (entry) => {
@@ -23,13 +40,24 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
         ? explorer.search()
         : explorer.load(entry.value as string)
       ).catch(() => {})
-      entry.status = 'loaded'
-      entry.value = result?.config || {}
+      const newEntry = { ...entry, format: [...(entry.format || [])] }
+      newEntry.status = 'loaded'
+      newEntry.value = result?.config || {}
       if (result) {
-        entry.meta ??= {}
-        entry.meta.filePath = result.filepath
+        newEntry.meta ??= {}
+        newEntry.meta.filePath = result.filepath
+        watcher?.add(result.filepath)
+        watchedEntries.set(result.filepath, entry)
       }
-      return entry
+      return newEntry
+    },
+    watch: async (cb) => {
+      watchCbs.add(cb)
+    },
+    unwatch: async () => {
+      watchCbs.clear()
+      watchedEntries.clear()
+      return watcher.close()
     },
   }
 }
