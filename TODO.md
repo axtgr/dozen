@@ -9,3 +9,4 @@
 - Better typing of forks?
 - Rethink how plugins handle statuses and return entries.
 - Rename load() to read()?
+- Review watchCbForPlugins and gotNewEntries.
