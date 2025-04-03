@@ -10,7 +10,7 @@ interface WrappedPlugin<TOptions extends object> {
   transform?: (config: object, options: TOptions) => Promise<object>
   validate?: (config: object, options: TOptions) => Promise<void>
   watch?: (cb: (entry: Entry) => void, options: TOptions) => void
-  unwatch?: (options: TOptions) => void
+  unwatch?: (cb: (entry: Entry) => void, options: TOptions) => void
 }
 
 function wrapPlugin<TOptions extends object>(plugin: Plugin<TOptions>) {

@@ -29,7 +29,7 @@ interface Plugin<TOptions extends object = object> {
   transform?: (config: object, options: TOptions) => Promise<object>
   validate?: (config: object, options: TOptions) => Promise<void>
   watch?: (cb: (entry: Entry) => void, options: TOptions) => Promise<void>
-  unwatch?: (options: TOptions) => Promise<void>
+  unwatch?: (cb: (entry: Entry) => void, options: TOptions) => Promise<void>
 }
 
 type PluginFactory<TOptions extends object = object> = (options: TOptions) => Plugin<TOptions>

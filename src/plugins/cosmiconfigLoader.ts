@@ -54,10 +54,12 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
     watch: async (cb) => {
       watchCbs.add(cb)
     },
-    unwatch: async () => {
-      watchCbs.clear()
-      watchedEntries.clear()
-      return watcher.close()
+    unwatch: async (cb) => {
+      watchCbs.delete(cb)
+      if (!watchCbs.size) {
+        watchedEntries.clear()
+        await watcher.close()
+      }
     },
   }
 }
