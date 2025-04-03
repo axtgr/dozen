@@ -1,3 +1,4 @@
+import { TransformStream } from 'node:stream/web'
 import forkLoader from './plugins/forkLoader.ts'
 import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
@@ -40,6 +41,9 @@ function dozen<
   let config: object = {}
   let entriesUpdated = false
   let promise = Promise.resolve()
+  let watchStream:
+    | (TransformStream<Entry, object> & { writer: WritableStreamDefaultWriter<Entry> })
+    | undefined
 
   const removeSubtree = (entryId: string, removeItself = true) => {
     if (removeItself) {
@@ -252,6 +256,33 @@ function dozen<
         plugins: [forkLoader, ...(options.plugins || []), ...(forkOptions?.plugins || [])],
       } as DozenOptions<TSources, TPlugins>
       return dozen(mergedOptions)
+    },
+
+    watch() {
+      if (!watchStream) {
+        watchStream = new TransformStream<Entry, object>({
+          async transform(entry, controller) {
+            spliceEntry(entry, true, false)
+            await instance.load()
+            controller.enqueue(config)
+          },
+        }) as any
+        watchStream!.writer = watchStream!.writable.getWriter()
+
+        plugins.forEach((plugin) => {
+          plugin.watch?.((entry) => watchStream?.writer.write(entry), options)
+        })
+      }
+
+      return watchStream!.readable
+    },
+
+    unwatch() {
+      watchStream?.writer?.close()
+      watchStream = undefined
+      plugins.forEach((plugin) => {
+        plugin.unwatch?.(options)
+      })
     },
   }
 

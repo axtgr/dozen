@@ -1,3 +1,5 @@
+import type { ReadableStreamDefaultController } from 'node:stream/web'
+
 interface Options {
   name: string
 }
@@ -26,6 +28,8 @@ interface Plugin<TOptions extends object = object> {
   reduce?: (config: object, entry: Entry, options: TOptions) => Promise<object>
   transform?: (config: object, options: TOptions) => Promise<object>
   validate?: (config: object, options: TOptions) => Promise<void>
+  watch?: (cb: (entry: Entry) => void, options: TOptions) => Promise<void>
+  unwatch?: (options: TOptions) => Promise<void>
 }
 
 type PluginFactory<TOptions extends object = object> = (options: TOptions) => Plugin<TOptions>
