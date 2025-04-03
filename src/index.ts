@@ -181,9 +181,6 @@ function dozen<
   }
 
   const processConfig = async () => {
-    if (!entriesUpdated) return
-    entriesUpdated = false
-
     let configPromise = Promise.resolve(Object.create(null))
 
     const reducer = plugins.findLast((p) => p.reduce)
@@ -214,10 +211,16 @@ function dozen<
   }
 
   const process = async () => {
-    promise = promise
-      .then(() => loadEntries())
-      .then(() => mapEntries())
-      .then(() => processConfig())
+    promise = promise.then(async () => {
+      if (!entriesUpdated) return
+      entriesUpdated = false
+      await loadEntries()
+      await mapEntries()
+      if (entriesUpdated) {
+        await processConfig()
+        entriesUpdated = false
+      }
+    })
     await promise
   }
 
@@ -250,6 +253,10 @@ function dozen<
           }
           spliceEntry(entry, false, false)
         })
+      if (watchCbs.size) {
+        // TODO: handle errors
+        process()
+      }
       return instance
     },
 
