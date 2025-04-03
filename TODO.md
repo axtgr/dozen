@@ -5,3 +5,5 @@
 - JSDoc.
 - If a parent entry changes its order, should the child entries be reordered as well?
 - Support import.meta.env?
+- Infer the type of config from schema.
+- Better typing of forks?
