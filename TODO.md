@@ -8,3 +8,4 @@
 - Infer the type of config from schema.
 - Better typing of forks?
 - Rethink how plugins handle statuses and return entries.
+- Rename load() to read()?
