@@ -7,3 +7,4 @@
 - Support import.meta.env?
 - Infer the type of config from schema.
 - Better typing of forks?
+- Rethink how plugins handle statuses and return entries.
