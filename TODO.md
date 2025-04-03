@@ -1,6 +1,5 @@
 - Tests.
 - Error handling.
-- Watching for changes.
 - React integration.
 - JSDoc.
 - If a parent entry changes its order, should the child entries be reordered as well?
@@ -9,4 +8,3 @@
 - Better typing of forks?
 - Rethink how plugins handle statuses and return entries.
 - Rename load() to read()?
-- Review watchCbForPlugins and gotNewEntries.
