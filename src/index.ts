@@ -1,4 +1,3 @@
-import { TransformStream } from 'node:stream/web'
 import forkLoader from './plugins/forkLoader.ts'
 import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
