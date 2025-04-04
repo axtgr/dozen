@@ -1,4 +1,6 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import dozen, {
+  type DozenInstance,
   type DozenOptions,
   type ExtractOptions,
   type UnionToIntersection,
@@ -30,6 +32,7 @@ import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
 function dozenForNode<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
+  TSchema extends StandardSchemaV1 | unknown = unknown,
 >(
   options?: Omit<
     DozenOptions<
@@ -45,9 +48,10 @@ function dozenForNode<
         Plugin<AssignReducerOptions>,
         Plugin<ParseSchemaTransformerOptions>,
         Plugin<StandardSchemaValidatorOptions>,
-      ]
+      ],
+      TSchema
     >,
-    'sources' | 'plugins'
+    'sources' | 'plugins' | 'schema'
   > & {
     disablePlugins?: (PluginFactory | Plugin | undefined | null | false)[]
     disableSources?: (Source | Entry | Entry[] | undefined | null | false)[]
@@ -55,11 +59,17 @@ function dozenForNode<
     Partial<UnionToIntersection<ExtractOptions<TPlugins[number]>>> & {
       sources?: TSources
       plugins?: TPlugins
+      schema?: TSchema
     },
-) {
+): DozenInstance<TSources, TPlugins, TSchema> {
   const name = options?.name
 
-  let sources = [configFile(), dotenv(), env(), ...(options?.sources || [])]
+  let sources: (Source | Entry | Entry[] | undefined | null | false)[] = [
+    configFile(),
+    dotenv(),
+    env(),
+    ...(options?.sources || []),
+  ]
 
   if (options?.disableSources) {
     sources = sources.filter((source) => {
@@ -67,7 +77,7 @@ function dozenForNode<
     })
   }
 
-  let plugins = [
+  let plugins: (PluginFactory | Plugin | undefined | null | false)[] = [
     cosmiconfigLoader,
     dotenvLoader,
     argvLoader,
@@ -87,7 +97,7 @@ function dozenForNode<
     })
   }
 
-  return dozen({
+  const finalOptions: DozenOptions<typeof sources, typeof plugins, TSchema> = {
     prefix: name
       ? {
           byFormat: {
@@ -109,7 +119,9 @@ function dozenForNode<
     ...options,
     sources,
     plugins,
-  } as unknown as DozenOptions<typeof sources, typeof plugins>)
+  }
+
+  return dozen(finalOptions)
 }
 
 dozenForNode.configFile = configFile
