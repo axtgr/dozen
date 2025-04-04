@@ -6,11 +6,13 @@ interface ConfigFileSourceOptions {
 
 function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceOptions> {
   return (_options) => {
+    const name = options?.name || _options.name
+    if (!name) return []
     return [
       {
         id: 'configFile',
         format: ['configFile'],
-        value: options?.name || _options.name,
+        value: name,
       },
     ]
   }
