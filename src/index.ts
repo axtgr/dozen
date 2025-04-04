@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import forkLoader from './plugins/forkLoader.ts'
 import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
@@ -17,19 +18,45 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
   ? I
   : never
 
+type DozenInstance<
+  TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
+  TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
+  TSchema extends StandardSchemaV1 | unknown = unknown,
+> = {
+  get(): TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object
+  load(): Promise<TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object>
+  add(
+    items:
+      | Source
+      | object
+      | undefined
+      | null
+      | false
+      | (Source | object | undefined | null | false)[],
+  ): DozenInstance<TSources, TPlugins, TSchema>
+  fork(
+    forkOptions?: DozenOptions<TSources, TPlugins, TSchema>,
+  ): DozenInstance<TSources, TPlugins, TSchema>
+  watch(cb?: (config: object) => void): () => void
+  unwatch(cb?: (config: object) => void): void
+}
+
 type DozenOptions<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
+  TSchema extends StandardSchemaV1 | unknown = unknown,
 > = {
   sources?: TSources
   plugins?: TPlugins
+  schema?: TSchema
 } & UnionToIntersection<ExtractOptions<TSources[number]>> &
   UnionToIntersection<ExtractOptions<TPlugins[number]>>
 
 function dozen<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
->(options: DozenOptions<TSources, TPlugins>) {
+  TSchema extends StandardSchemaV1 | unknown = unknown,
+>(options: DozenOptions<TSources, TPlugins, TSchema>) {
   const plugins = toFilteredArray(options.plugins).map((pluginOrFactory) => {
     const plugin =
       typeof pluginOrFactory === 'function' ? pluginOrFactory(options) : pluginOrFactory
@@ -223,28 +250,20 @@ function dozen<
     await promise
   }
 
-  const instance = {
+  const instance: DozenInstance<TSources, TPlugins, TSchema> = {
     get() {
-      return config
+      return config as any
     },
 
     async load() {
       await process()
-      return config
+      return instance.get()
     },
 
-    add(
-      items:
-        | Source
-        | object
-        | undefined
-        | null
-        | false
-        | (Source | object | undefined | null | false)[],
-    ) {
+    add(items) {
       toFilteredArray(items)
         .flatMap((item) => {
-          return typeof item === 'function' ? (item as Source)(options) : rawSource(item)(options)
+          return typeof item === 'function' ? item(options) : rawSource(item)(options)
         })
         .forEach((entry) => {
           if (!entry.status) {
@@ -259,16 +278,16 @@ function dozen<
       return instance
     },
 
-    fork(forkOptions?: DozenOptions<TSources, TPlugins>) {
+    fork(forkOptions?) {
       const mergedOptions = {
         ...options,
         sources: [fork(instance), ...(forkOptions?.sources || [])],
         plugins: [forkLoader, ...(options.plugins || []), ...(forkOptions?.plugins || [])],
-      } as DozenOptions<TSources, TPlugins>
+      }
       return dozen(mergedOptions)
     },
 
-    watch(cb?: (config: object) => void) {
+    watch(cb?) {
       cb ??= () => {}
       watchCbs.add(cb)
       if (watchCbs.size === 1) {
@@ -277,7 +296,7 @@ function dozen<
       return () => instance.unwatch(cb)
     },
 
-    unwatch(cb?: (config: object) => void) {
+    unwatch(cb?) {
       if (cb) {
         watchCbs.delete(cb)
       } else {
@@ -293,8 +312,6 @@ function dozen<
 
   return instance
 }
-
-type DozenInstance = ReturnType<typeof dozen>
 
 export default dozen
 export type { UnionToIntersection, ExtractOptions, DozenOptions, DozenInstance }
