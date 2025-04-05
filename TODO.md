@@ -1,9 +1,6 @@
 - Tests.
 - Error handling.
-- React integration.
-- JSDoc.
+- React integration?
 - If a parent entry changes its order, should the child entries be reordered as well?
-- Support import.meta.env?
 - Better typing of forks?
 - Rethink how plugins handle statuses and return entries.
-- Rename load() to read()?
