@@ -2,6 +2,9 @@ import type { Source } from '../types.ts'
 
 type DotenvSourceOptions = object
 
+/**
+ * Provides dotenv file paths as an entry.
+ */
 function dotenv(): Source {
   return () => {
     return [

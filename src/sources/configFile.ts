@@ -4,6 +4,9 @@ interface ConfigFileSourceOptions {
   name?: string
 }
 
+/**
+ * Provides config file paths as an entry.
+ */
 function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceOptions> {
   return (_options) => {
     const name = options?.name || _options.name

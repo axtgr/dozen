@@ -4,6 +4,9 @@ interface ArgvSourceOptions {
   args?: string[]
 }
 
+/**
+ * Provides command line arguments as an entry.
+ */
 function argv(options?: ArgvSourceOptions): Source {
   return () => [
     {

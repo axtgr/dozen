@@ -2,6 +2,9 @@ import type { Source } from '../types.ts'
 
 type EnvSourceOptions = object
 
+/**
+ * Provides environment variables as an entry.
+ */
 function env(): Source {
   return () => [
     {

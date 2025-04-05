@@ -5,7 +5,10 @@ type ForkSourceOptions = object
 
 let id = 0
 
-function fork(parentDozen: DozenInstance): Source {
+/**
+ * Provides a reference to the parent Dozen instance as an entry.
+ */
+function fork(parentDozen: DozenInstance<any, any>): Source {
   return () => [
     {
       id: `fork-${id++}`,
