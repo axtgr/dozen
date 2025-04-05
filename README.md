@@ -3,7 +3,7 @@
 <h1 align="center">dozen</h1>
 
 <p align="center">
-  <strong>Load config from a dozen sources, normalize and validate with Zod</strong>
+  <strong>Load config from a dozen sources, normalize and validate with Zod, Valibot or ArkType</strong>
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ import dozen from 'dozen'
 // - Merges into a single object
 // - Converts keys to camelCase
 
-const config = await dozen().load()
+const config = await dozen().build()
 ```
 
 ```js
@@ -63,10 +63,10 @@ dz.add(dozen.argv())
 dz.add({ port: 8008 })
 
 // - Reads from:
-//     1. The "myapp" field in package.json, myapp.config.json, myapprc.yaml, etc.
-//     2. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
-//     3. Environment variables (process.env)
-//     4. The config.json file in the current working directory
+//     1. The "myapp" field in package.json;
+//     2. myapp.config.json, myapprc.yaml, .myapprc and other config files with the given name;
+//     3. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
+//     4. Environment variables (process.env)
 //     5. CLI arguments (process.argv)
 //     6. The config object passed to dz.add()
 // - For env values, keeps only those with the MYAPP_ prefix, then removes the prefix
@@ -74,5 +74,5 @@ dz.add({ port: 8008 })
 // - Converts keys to camelCase
 // - Validates with the schema
 
-const config = await dzn.load()
+const config = await dzn.build()
 ```
