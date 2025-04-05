@@ -29,6 +29,18 @@ import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
 import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
 
+/**
+ * Creates a new instance of Dozen tuned for Node.js-compatible runtimes that loads
+ * from the following sources:
+ *
+ * 1. The "myapp" field in package.json;
+ * 2. myapp.config.json, myapprc.yaml, .myapprc and other config files with the given name;
+ * 3. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files;
+ * 4. Environment variables (process.env);
+ * 5. CLI arguments (process.argv) (if the argv plugin is enabled).
+ *
+ * Then normalizes and validates the config object with the given schema (if provided).
+ */
 function dozenForNode<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
