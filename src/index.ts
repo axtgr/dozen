@@ -24,7 +24,9 @@ type DozenInstance<
   TSchema extends StandardSchemaV1 | unknown = unknown,
 > = {
   get(): TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object
-  load(): Promise<TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object>
+  build(): Promise<
+    TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object
+  >
   add(
     items:
       | Source
@@ -71,7 +73,7 @@ function dozen<
   const watchCbs = new Set<(config: object) => void>()
   const watchCbForPlugins = (entry: Entry) => {
     spliceEntry(entry, true, false)
-    process()
+    build()
   }
 
   const removeSubtree = (entryId: string, removeItself = true) => {
@@ -206,7 +208,7 @@ function dozen<
     }
   }
 
-  const processConfig = async () => {
+  const buildConfig = async () => {
     let configPromise = Promise.resolve(Object.create(null))
 
     const reducer = plugins.findLast((p) => p.reduce)
@@ -236,14 +238,14 @@ function dozen<
     watchCbs.forEach((cb) => cb(config))
   }
 
-  const process = async () => {
+  const build = async () => {
     promise = promise.then(async () => {
       if (!entriesUpdated) return
       entriesUpdated = false
       await loadEntries()
       await mapEntries()
       if (entriesUpdated) {
-        await processConfig()
+        await buildConfig()
         entriesUpdated = false
       }
     })
@@ -252,11 +254,13 @@ function dozen<
 
   const instance: DozenInstance<TSources, TPlugins, TSchema> = {
     get() {
-      return config as any
+      return config as TSchema extends StandardSchemaV1
+        ? StandardSchemaV1.InferOutput<TSchema>
+        : object
     },
 
-    async load() {
-      await process()
+    async build() {
+      await build()
       return instance.get()
     },
 
@@ -273,7 +277,7 @@ function dozen<
         })
       if (watchCbs.size) {
         // TODO: handle errors
-        process()
+        build()
       }
       return instance
     },
