@@ -59,6 +59,8 @@ type DozenInstance<
    * Creates a new instance of Dozen that inherits the current instance's options,
    * sources and plugins, and adds its own. When building, the fork will first call
    * build() on the parent instance, then build on top of it.
+   *
+   * Forks currently don't support watching.
    */
   fork(
     forkOptions?: DozenOptions<TSources, TPlugins, TSchema>,

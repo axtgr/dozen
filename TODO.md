@@ -1,5 +1,6 @@
 - Tests.
 - Error handling when watching.
+- Watching in forks.
 - React integration?
 - If a parent entry changes its order, should the child entries be reordered as well?
 - Better typing of forks?
