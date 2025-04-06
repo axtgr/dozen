@@ -29,18 +29,18 @@ type DozenInstance<
   get(): TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object
 
   /**
-   * Builds the config object if needed and returns it.
+   * Builds the config object (if needed) and returns it.
    *
    * If there have been changes in the sources since the last build, the corresponding
-   * sources will be loaded and mapped, and the config object will be rebuilt, otherwise
-   * the cached config object will be returned.
+   * sources (and only them) will be loaded and mapped, and the config object will be rebuilt,
+   * otherwise the cached config object will be returned.
    */
   build(): Promise<
     TSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<TSchema> : object
   >
 
   /**
-   * Adds one or more sources or values to the pipeline.
+   * Adds one or more sources or values to the pipeline. Falsy values are ignored.
    *
    * If watching is enabled, this will trigger a rebuild,
    * otherwise build() has to be called manually.
@@ -58,15 +58,15 @@ type DozenInstance<
   /**
    * Creates a new instance of Dozen that inherits the current instance's options,
    * sources and plugins, and adds its own. When building, the fork will first call
-   * build() on the parent instance, then build with on top of it.
+   * build() on the parent instance, then build on top of it.
    */
   fork(
     forkOptions?: DozenOptions<TSources, TPlugins, TSchema>,
   ): DozenInstance<TSources, TPlugins, TSchema>
 
   /**
-   * Creates a watcher that waits for changes in sources and rebuilds the config object
-   * so that get() always returns the up-to-date config. If a callback is provided,
+   * Starts watching for changes in sources and rebuilds the config object so that
+   * get() always returns the up-to-date config. If a callback is provided,
    * it will be called with the updated config.
    *
    * @returns A function that can be called to stop watching.
@@ -75,7 +75,7 @@ type DozenInstance<
 
   /**
    * Stops watching for changes. If a callback is provided, only the corresponding
-   * watcher will be stopped, otherwise removes all watchers.
+   * watcher will be removed, otherwise removes all watchers.
    */
   unwatch(cb?: (config: object) => void): void
 }
