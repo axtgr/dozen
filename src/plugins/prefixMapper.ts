@@ -5,7 +5,7 @@ interface PrefixMapperOptions {
   prefix?: {
     filter?: boolean | string
     remove?: boolean | string
-    byFormat?: Record<string, { filter?: boolean; remove?: boolean }>
+    byFormat?: Record<string, { filter?: boolean | string; remove?: boolean | string }>
   }
 }
 
