@@ -9,7 +9,7 @@ type CoerceStringsMapperOptions = {
   coerceStrings?:
     | boolean
     | (CoerceTo & {
-        byFormat?: boolean | Record<string, CoerceTo>
+        byFormat?: Record<string, boolean | CoerceTo>
       })
 }
 
