@@ -1,6 +1,6 @@
 <br>
 
-<h1 align="center">dozen</h1>
+<h1 align="center">Dozen</h1>
 
 <p align="center">
   <strong>Load config from a dozen sources, normalize and validate with Zod, Valibot or ArkType</strong>
@@ -14,9 +14,11 @@
 
 <br>
 
-Dozen is a TypeScript library for Node.js/Bun that loads configuration for your app from various sources, such as config files, .env files, environment variables, CLI arguments, plain objects and others. It then normalizes the values (e.g. coerces to numbers and booleans) and keys (e.g. converts to camelCase), merges them into a single object and validates it against a schema if required. It can watch the sources for changes and automatically rebuild the config and notify the user.
+Dozen is a TypeScript library that loads configuration for your app from various sources, such as config files, .env files, environment variables, CLI arguments, plain objects and others. It then normalizes the values (e.g. coerces to numbers and booleans) and keys (e.g. converts to camelCase), merges them into a single object and validates it against a schema if required. It can watch the sources for changes and automatically rebuild the config and notify the user.
 
 The library is designed to be extensible by using a plugin system similar to that of Rollup/Vite. Every step of the pipeline can be customized by adding or disabling a plugin or source. For example, you can add a plugin that reads from a database or parses TOML syntax.
+
+Currently, Dozen ships .ts files and can be used only in an environment that runs TypeScript, such as Node.js v23.6+ or Bun.js.
 
 ## Quickstart
 
@@ -63,8 +65,11 @@ dz.add(dozen.file('config.json'))
 // CLI arguments aren't read by default, but supported via dozen.argv()
 dz.add(dozen.argv())
 
-// It accepts partial config objects as well
+// It accepts plain objects as well
 dz.add({ port: 8008 })
+
+// .get() returns the cached config without building it
+console.log(dz.get()) // => {} because dz.build() has not been called yet
 
 // - Reads from:
 //     1. The "myapp" field in package.json
@@ -80,6 +85,8 @@ dz.add({ port: 8008 })
 // - Validates with the schema
 
 const config = await dzn.build()
+
+console.log(dz.get()) // => { host: 'localhost', port: 8008, enabled: true }
 ```
 
 ## API
