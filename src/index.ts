@@ -2,7 +2,7 @@ import type { StandardSchemaV1 } from '@standard-schema/spec'
 import forkLoader from './plugins/forkLoader.ts'
 import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
-import type { Entry, Plugin, PluginFactory, Source } from './types.ts'
+import type { Entry, Plugin, PluginFactory, PluginWatchCb, Source } from './types.ts'
 import { toFilteredArray } from './utils.ts'
 import wrapPlugin from './wrapPlugin.ts'
 
@@ -17,6 +17,14 @@ type ExtractOptions<T> = T extends Source<infer O>
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
   : never
+
+type WatchCb = (config: object) => void
+type CatchCb = (err: unknown) => void
+
+interface Watcher {
+  unwatch(): void
+  catch(cb?: CatchCb): Watcher
+}
 
 type DozenInstance<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
@@ -71,15 +79,15 @@ type DozenInstance<
    * get() always returns the up-to-date config. If a callback is provided,
    * it will be called with the updated config.
    *
-   * @returns A function that can be called to stop watching.
+   * @returns A watcher object that can be used to catch error and stop watching.
    */
-  watch(cb?: (config: object) => void): () => void
+  watch(cb?: WatchCb): Watcher
 
   /**
    * Stops watching for changes. If a callback is provided, only the corresponding
-   * watcher will be removed, otherwise removes all watchers.
+   * watcher will be stopped, otherwise stops all watchers.
    */
-  unwatch(cb?: (config: object) => void): void
+  unwatch(cb?: WatchCb): void
 }
 
 type DozenOptions<
@@ -112,10 +120,45 @@ function dozen<
   let entriesUpdated = false
   let promise = Promise.resolve()
 
-  const watchCbs = new Set<(config: object) => void>()
-  const watchCbForPlugins = (entry: Entry) => {
-    spliceEntry(entry, true, false)
-    build()
+  const watchCbs = new Set<WatchCb>()
+  const catchCbs = new Map<WatchCb, CatchCb>()
+
+  const pluginWatchCb: PluginWatchCb = (err, entry) => {
+    if (err) {
+      handleWatchError(err)
+    } else {
+      spliceEntry(entry!, true, false)
+      build().catch(handleWatchError)
+    }
+  }
+
+  const handleWatchError = (err: unknown) => {
+    if (catchCbs.size) {
+      catchCbs.forEach((catchCb) => catchCb(err))
+    } else {
+      console.error(
+        'Dozen: an error occurred while watching, and no catch handler is defined, so the error was ignored. Assign catch handlers to watchers to handle errors',
+      )
+      console.error(err)
+    }
+  }
+
+  const triggerWatchCbs = () => {
+    watchCbs.forEach(async (cb) => {
+      try {
+        await cb(config)
+      } catch (err) {
+        const catchCb = catchCbs.get(cb)
+        if (catchCb) {
+          catchCb(err)
+        } else {
+          console.error(
+            'Dozen: an error occurred inside a watch handler, and no corresponding catch handler is defined, so the error was ignored. Assign a catch handler to the watcher to handle errors',
+          )
+          console.error(err)
+        }
+      }
+    })
   }
 
   const removeSubtree = (entryId: string, removeItself = true) => {
@@ -277,7 +320,6 @@ function dozen<
     )
 
     config = _config
-    watchCbs.forEach((cb) => cb(config))
   }
 
   const build = async () => {
@@ -289,6 +331,7 @@ function dozen<
       if (entriesUpdated) {
         await buildConfig()
         entriesUpdated = false
+        triggerWatchCbs()
       }
     })
     await promise
@@ -318,8 +361,7 @@ function dozen<
           spliceEntry(entry, false, false)
         })
       if (watchCbs.size) {
-        // TODO: handle errors
-        build()
+        build().catch(handleWatchError)
       }
       return instance
     },
@@ -337,19 +379,28 @@ function dozen<
       cb ??= () => {}
       watchCbs.add(cb)
       if (watchCbs.size === 1) {
-        plugins.forEach((plugin) => plugin.watch?.(watchCbForPlugins, options))
+        plugins.forEach((plugin) => plugin.watch?.(pluginWatchCb, options))
       }
-      return () => instance.unwatch(cb)
+      const watcher: Watcher = {
+        unwatch: () => instance.unwatch(cb),
+        catch: (catchCb) => {
+          catchCbs.set(cb, catchCb || (() => {}))
+          return watcher
+        },
+      }
+      return watcher
     },
 
     unwatch(cb?) {
       if (cb) {
         watchCbs.delete(cb)
+        catchCbs.delete(cb)
       } else {
         watchCbs.clear()
+        catchCbs.clear()
       }
       if (!watchCbs.size) {
-        plugins.forEach((plugin) => plugin.unwatch?.(watchCbForPlugins, options))
+        plugins.forEach((plugin) => plugin.unwatch?.(pluginWatchCb, options))
       }
     },
   }

@@ -1,20 +1,25 @@
 import { FSWatcher } from 'chokidar'
 import { cosmiconfig } from 'cosmiconfig'
-import type { Entry, PluginFactory } from '../types.ts'
+import type { Entry, PluginFactory, PluginWatchCb } from '../types.ts'
 
 function createWatcher() {
   const watchedEntries = new Map<string, Entry>()
-  const watchCbs = new Set<(entry: Entry) => void>()
+  const watchCbs = new Set<PluginWatchCb>()
   let chokidar: FSWatcher | undefined
 
-  const onChange = (_eventName: string, filePath: string) => {
+  const onChange = (eventName: string, filePath: string) => {
+    if (eventName === 'error') return
     if (watchedEntries.has(filePath)) {
       const entry = watchedEntries.get(filePath)!
       entry.status = 'pending'
-      watchCbs.forEach((cb) => cb(entry))
+      watchCbs.forEach((cb) => cb(undefined, entry))
     } else {
       chokidar?.unwatch(filePath)
     }
+  }
+
+  const onError = (err: unknown) => {
+    watchCbs.forEach((cb) => cb(err))
   }
 
   return {
@@ -22,17 +27,18 @@ function createWatcher() {
       chokidar?.add(filePath)
       watchedEntries.set(filePath, entry)
     },
-    async watch(cb: (entry: Entry) => void) {
+    async watch(cb: PluginWatchCb) {
       watchCbs.add(cb)
       if (watchCbs.size === 1) {
         chokidar = new FSWatcher({
           ignoreInitial: true,
         })
         chokidar.on('all', onChange)
+        chokidar.on('error', onError)
         watchedEntries.keys().forEach((filePath) => chokidar!.add(filePath))
       }
     },
-    async unwatch(cb: (entry: Entry) => void) {
+    async unwatch(cb: (err?: unknown, entry?: Entry) => void) {
       watchCbs.delete(cb)
       if (!watchCbs.size) {
         await chokidar?.close()
@@ -74,7 +80,7 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
       if (result) {
         newEntry.meta ??= {}
         newEntry.meta.filePath = result.filepath
-        watcher.add(result.filepath, newEntry)
+        watcher.add(result.filepath, entry)
       }
       return newEntry
     },
