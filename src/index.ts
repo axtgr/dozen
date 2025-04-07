@@ -21,9 +21,15 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 type WatchCb = (config: object) => void
 type CatchCb = (err: unknown) => void
 
+/**
+ * A controller responsible for the watching of changes in Dozen.
+ */
 interface Watcher {
+  /** Start watching for changes with the callback provided when the watcher was created */
   start(): Watcher
+  /** Stop watching for changes */
   stop(): Watcher
+  /** Catch errors thrown either in non-manual builds or inside the watcher callback */
   catch(cb?: CatchCb): Watcher
 }
 
@@ -80,7 +86,7 @@ type DozenInstance<
    * get() always returns the up-to-date config. If a callback is provided,
    * it will be called with the updated config.
    *
-   * @returns A watcher object that can be used to catch error and stop watching.
+   * @returns A watcher object that can be used to control the watching and catch errors.
    */
   watch(cb?: WatchCb): Watcher
 
@@ -124,6 +130,7 @@ function dozen<
   const watchCbs = new Set<WatchCb>()
   const catchCbs = new Map<WatchCb, CatchCb>()
 
+  /** Callback provided to the watch() method of plugins */
   const pluginWatchCb: PluginWatchCb = (err, entry) => {
     if (err) {
       handleWatchError(err)
@@ -133,6 +140,10 @@ function dozen<
     }
   }
 
+  /**
+   * Handles errors thrown either by non-manual builds or by plugins watching for changes.
+   * Isn't used to handle errors in watcher callbacks themselves.
+   **/
   const handleWatchError = (err: unknown) => {
     if (catchCbs.size) {
       catchCbs.forEach((catchCb) => catchCb(err))
@@ -144,6 +155,7 @@ function dozen<
     }
   }
 
+  /** Triggers all watcher callbacks with the current config and handles errors that occur in them */
   const triggerWatchCbs = () => {
     watchCbs.forEach(async (cb) => {
       try {
@@ -162,6 +174,7 @@ function dozen<
     })
   }
 
+  /** Removes all descendants of the entry with the given id and, optionally, the entry itself */
   const removeSubtree = (entryId: string, removeItself = true) => {
     if (removeItself) {
       const index = entries.findIndex((entry) => entry.id === entryId)
@@ -177,6 +190,7 @@ function dozen<
       })
   }
 
+  /** Adds or replaces the given entry and moves it if needed */
   const spliceEntry = (entry: Entry, replaceSelf: boolean, putBeforeParent: boolean) => {
     const selfIndex = entries.findIndex((e) => e.id === entry.id)
     let parentIndex = entry.parentId ? entries.findIndex((e) => e.id === entry.parentId) : -1
@@ -323,6 +337,7 @@ function dozen<
     config = _config
   }
 
+  /** Invokes the whole processing pipeline */
   const build = async () => {
     promise = promise.then(async () => {
       if (!entriesUpdated) return
