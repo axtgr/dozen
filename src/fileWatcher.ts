@@ -1,3 +1,4 @@
+import Path from 'node:path'
 // @parcel/watcher is supposed to be better than chokidar, but it doesn't work in Bun.js
 import { FSWatcher } from 'chokidar'
 import type { Entry, PluginWatchCb } from './types.ts'
@@ -24,7 +25,8 @@ function createFileWatcher() {
 
   return {
     add(filePath: string, entry: Entry) {
-      chokidar?.add(filePath)
+      // Watch for the dirname instead of the full file path to catch file creation
+      chokidar?.add(Path.dirname(filePath))
       watchedEntries.set(filePath, entry)
     },
     async watch(cb: PluginWatchCb) {
