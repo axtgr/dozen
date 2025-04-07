@@ -91,9 +91,9 @@ console.log(dz.get()) // => { host: 'localhost', port: 8008, enabled: true }
 
 ## API
 
-### dozen(options?: Options): Instance
+### `dozen(options?: Options): Instance`
 
-Creates an instance of Dozen with the default preset.
+Creates an instance of Dozen with the default preset merged with the given options.
 
 ### Instance
 
@@ -112,7 +112,7 @@ values when applicable, then merges and validates the config object with the giv
 (if provided).
 
 
-### .build(): Promise\<object\>
+#### `async .build(): Promise\<object\>`
 
 Builds the config object (if needed) and returns it.
 
@@ -120,28 +120,28 @@ If there have been changes in the sources since the last build, the correspondin
 sources (and only them) will be loaded and mapped, and the config object will be rebuilt,
 otherwise the cached config object will be returned.
 
-### .get(): object
+#### `.get(): object`
 
 Returns the currently cached config object. If the config object has not been built yet,
 returns an empty object.
 
-### .add(items: Source | object | undefined | null | false | (Source | object | undefined | null | false)[]): Instance
+#### `.add(items: Source | object | undefined | null | false | (Source | object | undefined | null | false)[]): Instance`
 
 Adds one or more sources or values to the pipeline. Falsy values are ignored.
 
 If watching is enabled, this will trigger a rebuild, otherwise build() has to be called manually.
 
-### .fork(options?: Options): Instance
+#### `.fork(options?: Options): Instance`
 
 Creates a new instance of Dozen that inherits the current instance's options, sources and plugins, and adds its own. When building, the fork will first call build() on the parent instance, then build on top of it.
 
-### .watch(cb?: (config: object) => void): () => void
+#### `.watch(cb?: (config: object) => void): Watcher`
 
-Starts watching for changes in sources and rebuilds the config object so that get() always returns the up-to-date config. If a callback is provided, it will be called with the updated config.
+Starts watching for changes in sources and rebuilds the config object so that get() always returns an up-to-date config. If a callback is provided, it will be called with the updated config.
 
-Returns a function that can be called to stop watching.
+Returns a watcher object that can be used to control the watching and catch errors.
 
-### .unwatch(cb?: (config: object) => void): () => void
+#### `.unwatch(cb?: (config: object) => void): void`
 
 Stops watching for changes. If a callback is provided, only the corresponding watcher will be removed, otherwise removes all watchers.
 
