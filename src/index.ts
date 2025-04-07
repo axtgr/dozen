@@ -22,7 +22,8 @@ type WatchCb = (config: object) => void
 type CatchCb = (err: unknown) => void
 
 interface Watcher {
-  unwatch(): void
+  start(): Watcher
+  stop(): Watcher
   catch(cb?: CatchCb): Watcher
 }
 
@@ -377,17 +378,25 @@ function dozen<
 
     watch(cb?) {
       cb ??= () => {}
-      watchCbs.add(cb)
-      if (watchCbs.size === 1) {
-        plugins.forEach((plugin) => plugin.watch?.(pluginWatchCb, options))
-      }
       const watcher: Watcher = {
-        unwatch: () => instance.unwatch(cb),
+        start: () => {
+          if (watchCbs.has(cb)) return watcher
+          watchCbs.add(cb)
+          if (watchCbs.size === 1) {
+            plugins.forEach((plugin) => plugin.watch?.(pluginWatchCb, options))
+          }
+          return watcher
+        },
+        stop: () => {
+          instance.unwatch(cb)
+          return watcher
+        },
         catch: (catchCb) => {
           catchCbs.set(cb, catchCb || (() => {}))
           return watcher
         },
       }
+      watcher.start()
       return watcher
     },
 
