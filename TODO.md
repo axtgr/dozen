@@ -5,3 +5,4 @@
 - Better typing of forks?
 - Rethink how plugins handle statuses and return entries.
 - Watch for creation of config files.
+- Replace cosmiconfig with a custom implementation.
