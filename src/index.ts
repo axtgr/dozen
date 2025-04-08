@@ -237,6 +237,7 @@ function dozen<
         const currentEntry = await resultPromise
         const returnedEntries = await plugin.load(currentEntry, options)
         let resultEntry = currentEntry
+        let putBeforeParent = true
         returnedEntries.forEach((returnedEntry) => {
           if (returnedEntry.id === entry.id) {
             if (returnedEntry.status === 'loading') {
@@ -244,12 +245,13 @@ function dozen<
             }
             spliceEntry(returnedEntry, true, false)
             resultEntry = returnedEntry
+            putBeforeParent = false
           } else {
             if (!returnedEntry.status) {
               returnedEntry.status = 'pending'
             }
             returnedEntry.parentId = entry.id
-            spliceEntry(returnedEntry, true, entry.status !== 'loaded')
+            spliceEntry(returnedEntry, true, putBeforeParent)
             gotNewEntries = true
           }
         })
@@ -279,15 +281,17 @@ function dozen<
         if (entry.status !== 'mapping' || !plugin.map) return resultPromise
         const resultEntry = await resultPromise
         const returnedEntries = await plugin.map(resultEntry, options)
+        let putBeforeParent = true
         returnedEntries.forEach((returnedEntry) => {
           if (returnedEntry.id === entry.id) {
             spliceEntry(returnedEntry, true, false)
+            putBeforeParent = false
           } else {
             if (!returnedEntry.status) {
               returnedEntry.status = 'pending'
             }
             returnedEntry.parentId = entry.id
-            spliceEntry(returnedEntry, true, entry.status !== 'loaded')
+            spliceEntry(returnedEntry, true, putBeforeParent)
             gotNewEntries = true
           }
         })
