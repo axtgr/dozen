@@ -48,7 +48,6 @@ function createFileWatcher() {
     },
 
     async unwatch(cb: (err?: unknown, entry?: Entry) => void) {
-      console.log('unwatch')
       watchCbs.delete(cb)
       if (!watchCbs.size) {
         await chokidar?.close()

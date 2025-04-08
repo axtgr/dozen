@@ -10,7 +10,7 @@ function dotenv(): Source {
     return [
       {
         id: 'dotenv',
-        format: ['file', 'env'],
+        format: ['file'],
         value: [
           `.env.${process.env.NODE_ENV || 'development'}.local`,
           `.env.${process.env.NODE_ENV || 'development'}`,
