@@ -1,5 +1,5 @@
 import type { ReadableStreamDefaultController } from 'node:stream/web'
-import type { Entry, Plugin } from './types.ts'
+import type { Entry, Plugin, PluginWatchCb } from './types.ts'
 import { toFilteredArray } from './utils.ts'
 
 interface WrappedPlugin<TOptions extends object> {
@@ -9,8 +9,8 @@ interface WrappedPlugin<TOptions extends object> {
   reduce?: (config: object, entry: Entry, options: TOptions) => Promise<object>
   transform?: (config: object, options: TOptions) => Promise<object>
   validate?: (config: object, options: TOptions) => Promise<void>
-  watch?: (cb: (entry: Entry) => void, options: TOptions) => void
-  unwatch?: (cb: (entry: Entry) => void, options: TOptions) => void
+  watch?: (cb: PluginWatchCb, options: TOptions) => Promise<void>
+  unwatch?: (cb: PluginWatchCb, options: TOptions) => Promise<void>
 }
 
 function wrapPlugin<TOptions extends object>(plugin: Plugin<TOptions>) {
