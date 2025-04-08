@@ -42,7 +42,6 @@
     "@standard-schema/spec": "^1.0.0",
     "chokidar": "^4.0.3",
     "cosmiconfig": "^9.0.0",
-    "dotenv": "^16.4.7",
     "text-case": "^1.0.9",
     "zod": "^3.24.2"
   },
