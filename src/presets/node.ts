@@ -10,10 +10,11 @@ import assignReducer, { type AssignReducerOptions } from '../plugins/assignReduc
 import coerceStringsMapper, {
   type CoerceStringsMapperOptions,
 } from '../plugins/coerceStringsMapper.ts'
-import cosmiconfigLoader, { type CosmiconfigLoaderOptions } from '../plugins/cosmiconfigLoader.ts'
 import deepReducer from '../plugins/deepReducer.ts'
-import dotenvLoader, { type DotenvLoaderOptions } from '../plugins/dotenvLoader.ts'
+import envMapper, { type EnvMapperOptions } from '../plugins/envMapper.ts'
 import extendsMapper, { type ExtendsMapperOptions } from '../plugins/extendsMapper.ts'
+import fileLoader, { type FileLoaderOptions } from '../plugins/fileLoader.ts'
+import jsonMapper, { type JsonMapperOptions } from '../plugins/jsonMapper.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
 import parseSchemaTransformer, {
   type ParseSchemaTransformerOptions,
@@ -50,9 +51,10 @@ function dozenForNode<
     DozenOptions<
       [Source<ConfigFileSourceOptions>, Source<DotenvSourceOptions>, Source<EnvSourceOptions>],
       [
-        Plugin<CosmiconfigLoaderOptions>,
-        Plugin<DotenvLoaderOptions>,
+        Plugin<FileLoaderOptions>,
         Plugin<ArgvLoaderOptions>,
+        Plugin<JsonMapperOptions>,
+        Plugin<EnvMapperOptions>,
         Plugin<PrefixMapperOptions>,
         Plugin<CoerceStringsMapperOptions>,
         Plugin<KeyCaseMapperOptions>,
@@ -90,9 +92,10 @@ function dozenForNode<
   }
 
   let plugins: (PluginFactory | Plugin | undefined | null | false)[] = [
-    cosmiconfigLoader,
-    dotenvLoader,
+    fileLoader,
     argvLoader,
+    jsonMapper,
+    envMapper,
     prefixMapper,
     coerceStringsMapper,
     keyCaseMapper,
