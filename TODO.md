@@ -6,6 +6,5 @@
 - Rethink how plugins handle statuses and return entries.
 - Watch for creation of config files.
 - Replace cosmiconfig with a custom implementation.
-- In fileWatcher, watch for file creation and modification separately, because when a file is created, we have to reprocess the whole parent entry, while if a file is modified, we only have to reprocess the affected child entry.
-- Add parsing to the pipeline.
 - Load from a field in an entry (e.g. package.json).
+- Make loading recursive.
