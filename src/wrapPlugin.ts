@@ -1,4 +1,3 @@
-import type { ReadableStreamDefaultController } from 'node:stream/web'
 import type { Entry, Plugin, PluginWatchCb } from './types.ts'
 import { toFilteredArray } from './utils.ts'
 

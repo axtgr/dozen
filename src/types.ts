@@ -1,5 +1,3 @@
-import type { ReadableStreamDefaultController } from 'node:stream/web'
-
 interface Options {
   name: string
 }
