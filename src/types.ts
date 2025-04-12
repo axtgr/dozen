@@ -1,7 +1,3 @@
-interface Options {
-  name: string
-}
-
 interface Entry {
   id: string
   parentId?: string
@@ -34,4 +30,4 @@ interface Plugin<TOptions extends object = object> {
 
 type PluginFactory<TOptions extends object = object> = (options: TOptions) => Plugin<TOptions>
 
-export type { Options, Entry, Source, PluginWatchCb, Plugin, PluginFactory }
+export type { Entry, Source, PluginWatchCb, Plugin, PluginFactory }
