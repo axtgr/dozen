@@ -6,4 +6,4 @@
 - Watch for creation of config files.
 - Load from a field in an entry (e.g. package.json).
 - Recover from errors in plugins.
-- In fileLoader, if there is no file initially, we need to watch for it to be created.
+- When a file is deleted, remove the entry and stop watching it.
