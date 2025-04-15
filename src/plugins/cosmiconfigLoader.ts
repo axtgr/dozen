@@ -26,7 +26,6 @@ const cosmiconfigLoader: PluginFactory<CosmiconfigLoaderOptions> = () => {
         : explorer.load(entry.value as string)
       ).catch(() => {})
       const newEntry = { ...entry, format: [...(entry.format || [])] }
-      newEntry.status = 'loaded'
       newEntry.value = result?.config || {}
       if (result) {
         newEntry.meta ??= {}

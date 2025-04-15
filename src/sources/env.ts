@@ -10,7 +10,6 @@ function env(): Source {
     {
       id: 'process.env',
       format: ['env', 'object'],
-      status: 'loaded',
       value: process.env,
     },
   ]

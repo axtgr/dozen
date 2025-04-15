@@ -18,6 +18,7 @@ const keyCaseMapper: PluginFactory<KeyCaseMapperOptions> = (options = {}) => {
         },
         Object.create(null) as Record<string, unknown>,
       )
+      return entry
     },
   }
 }

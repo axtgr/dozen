@@ -14,6 +14,7 @@ type FileLoaderOptions = object
 
 const fileLoader: PluginFactory<FileLoaderOptions> = () => {
   const watcher = createFileWatcher()
+
   return {
     name: 'default:fileLoader',
 
@@ -32,8 +33,11 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
         } catch (e) {}
       }
 
+      entry.value = {}
+
       if (!filePath) {
-        entry.value = undefined
+        // TODO: even if there is currently no file, it could be added later,
+        // so we should watch the path
         return entry
       }
 
@@ -41,32 +45,21 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
         filePath === '.env' || filePath.startsWith('.env.')
           ? 'env'
           : Path.extname(filePath).slice(1)
-      const format = entry.format!.concat(fileFormat)
-
-      if (paths.length === 1) {
-        watcher.add(filePath, { ...entry, value: filePath })
-        entry.value = value || {}
-        entry.format = format
-        entry.meta ??= {}
-        entry.meta.filePath = filePath
-        return entry
-      }
+      const format = entry
+        .format!.filter((f) => f !== 'file' && f !== fileFormat)
+        .concat(fileFormat)
 
       const loadedFileEntry = {
-        id: filePath,
-        parentId: entry.id,
-        status: 'loaded',
+        id: `file:loaded:${filePath}`,
         meta: { ...entry.meta, filePath },
         format,
         value,
-      } satisfies Entry
-
-      entry.status = 'loaded'
-      entry.value = {}
+      }
 
       const entryToEmitOnWatch = {
         ...loadedFileEntry,
-        format,
+        id: `file:${filePath}`,
+        format: format.concat('file'),
         value: filePath,
       }
 

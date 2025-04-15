@@ -1,15 +1,15 @@
+type EntryStatus = 'pending' | 'loading' | 'loaded' | 'mapping' | 'mapped'
+
 interface Entry {
   id: string
-  parentId?: string
   value?: unknown
   format?: string[]
-  status?: 'pending' | 'loading' | 'loaded' | 'mapping' | 'mapped'
   meta?: Record<string, unknown>
 }
 
 type Source<TOptions extends object = object> = (options: TOptions) => Entry[]
 
-type PluginWatchCb = (err?: unknown, entry?: Entry) => void
+type PluginWatchCb = (err?: unknown, entry?: Entry, parentEntry?: Entry) => void
 
 interface Plugin<TOptions extends object = object> {
   name: string
@@ -30,4 +30,4 @@ interface Plugin<TOptions extends object = object> {
 
 type PluginFactory<TOptions extends object = object> = (options: TOptions) => Plugin<TOptions>
 
-export type { Entry, Source, PluginWatchCb, Plugin, PluginFactory }
+export type { EntryStatus, Entry, Source, PluginWatchCb, Plugin, PluginFactory }

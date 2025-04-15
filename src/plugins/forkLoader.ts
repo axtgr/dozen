@@ -15,7 +15,6 @@ const forkLoader: PluginFactory<ForkLoaderOptions> = () => {
     name: 'default:forkLoader',
     load: async (entry) => {
       if (!canLoadEntry(entry)) return
-      entry.status = 'loaded'
       entry.value = await (entry.value as DozenInstance<[], []>).build()
       return entry
     },

@@ -11,11 +11,12 @@ import coerceStringsMapper, {
   type CoerceStringsMapperOptions,
 } from '../plugins/coerceStringsMapper.ts'
 import deepReducer from '../plugins/deepReducer.ts'
-import envMapper, { type EnvMapperOptions } from '../plugins/envMapper.ts'
+import envLoader, { type EnvLoaderOptions } from '../plugins/envLoader.ts'
 import extendsMapper, { type ExtendsMapperOptions } from '../plugins/extendsMapper.ts'
 import fileLoader, { type FileLoaderOptions } from '../plugins/fileLoader.ts'
-import jsonMapper, { type JsonMapperOptions } from '../plugins/jsonMapper.ts'
+import jsonLoader, { type JsonLoaderOptions } from '../plugins/jsonLoader.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
+import objectLoader, { type ObjectLoaderOptions } from '../plugins/objectLoader.ts'
 import parseSchemaTransformer, {
   type ParseSchemaTransformerOptions,
 } from '../plugins/parseSchemaTransformer.ts'
@@ -53,8 +54,9 @@ function dozenForNode<
       [
         Plugin<FileLoaderOptions>,
         Plugin<ArgvLoaderOptions>,
-        Plugin<JsonMapperOptions>,
-        Plugin<EnvMapperOptions>,
+        Plugin<ObjectLoaderOptions>,
+        Plugin<JsonLoaderOptions>,
+        Plugin<EnvLoaderOptions>,
         Plugin<PrefixMapperOptions>,
         Plugin<CoerceStringsMapperOptions>,
         Plugin<KeyCaseMapperOptions>,
@@ -94,8 +96,9 @@ function dozenForNode<
   let plugins: (PluginFactory | Plugin | undefined | null | false)[] = [
     fileLoader,
     argvLoader,
-    jsonMapper,
-    envMapper,
+    jsonLoader,
+    envLoader,
+    objectLoader,
     prefixMapper,
     coerceStringsMapper,
     keyCaseMapper,

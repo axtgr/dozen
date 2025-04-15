@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
+import EntryStore from './EntryStore.ts'
 import forkLoader from './plugins/forkLoader.ts'
 import fork from './sources/fork.ts'
 import rawSource from './sources/raw.ts'
@@ -122,20 +123,19 @@ function dozen<
     return wrapPlugin(plugin)
   })
 
-  const entries: Entry[] = []
+  const entryStore = new EntryStore()
   let config: object = {}
-  let entriesUpdated = false
   let promise = Promise.resolve()
 
   const watchCbs = new Set<WatchCb>()
   const catchCbs = new Map<WatchCb, CatchCb>()
 
   /** Callback provided to the watch() method of plugins */
-  const pluginWatchCb: PluginWatchCb = (err, entry) => {
+  const pluginWatchCb: PluginWatchCb = (err, entry, parentEntry) => {
     if (err) {
       handleWatchError(err)
-    } else {
-      spliceEntry(entry!, true, false)
+    } else if (entry) {
+      entryStore.updateEntry(entry, parentEntry?.id, 'pending', true, false)
       build().catch(handleWatchError)
     }
   }
@@ -174,140 +174,108 @@ function dozen<
     })
   }
 
-  /** Removes all descendants of the entry with the given id and, optionally, the entry itself */
-  const removeSubtree = (entryId: string, removeItself = true) => {
-    if (removeItself) {
-      const index = entries.findIndex((entry) => entry.id === entryId)
-      if (index !== -1) {
-        entries.splice(index, 1)
-        entriesUpdated = true
-      }
-    }
-    entries
-      .filter((entry) => entry.parentId === entryId)
-      .forEach((entry) => {
-        removeSubtree(entry.id!, true)
-      })
-  }
-
-  /** Adds or replaces the given entry and moves it if needed */
-  const spliceEntry = (entry: Entry, replaceSelf: boolean, putBeforeParent: boolean) => {
-    const selfIndex = entries.findIndex((e) => e.id === entry.id)
-    let parentIndex = entry.parentId ? entries.findIndex((e) => e.id === entry.parentId) : -1
-
-    if (parentIndex === -1) {
-      if (selfIndex === -1) {
-        entries.push(entry)
-      } else if (replaceSelf) {
-        entries.splice(selfIndex, 1, entry)
-      } else {
-        entries.splice(selfIndex, 1)
-        entries.push(entry)
-      }
-    } else {
-      if (selfIndex !== -1) {
-        entries.splice(selfIndex, 1)
-      }
-      parentIndex += selfIndex === -1 || selfIndex > parentIndex || !replaceSelf ? 0 : -1
-      if (putBeforeParent) {
-        entries.splice(parentIndex, 0, entry)
-      } else {
-        entries.splice(parentIndex + 1, 0, entry)
-      }
-    }
-
-    // A pending entry means it's going to be loaded and mapped producing a new set
-    // of child entries, so we remove the existing children.
-    if (entry.status === 'pending') {
-      removeSubtree(entry.id, false)
-    }
-
-    entriesUpdated = true
-  }
-
   const loadEntries = async () => {
-    let gotNewEntries = false
+    const promises = entryStore.getEntries('pending').map(async (entry) => {
+      entryStore.setEntryStatus(entry.id, 'loading')
 
-    const promises = entries.map(async (entry) => {
-      if (entry.status !== 'pending') return entry
-      entry.status = 'loading'
+      for (const plugin of plugins) {
+        if (!plugin.load || entryStore.getEntryStatus(entry.id) !== 'loading') continue
 
-      const loadedEntry = await plugins.reduce(async (resultPromise, plugin) => {
-        if (entry.status !== 'loading' || !plugin.load) return resultPromise
-        const currentEntry = await resultPromise
-        const returnedEntries = await plugin.load(currentEntry, options)
-        let resultEntry = currentEntry
+        const returnedEntries = await plugin.load(entry, options)
         let putBeforeParent = true
-        returnedEntries.forEach((returnedEntry) => {
-          if (returnedEntry.id === entry.id) {
-            if (returnedEntry.status === 'loading') {
-              returnedEntry.status = 'loaded'
-            }
-            spliceEntry(returnedEntry, true, false)
-            resultEntry = returnedEntry
-            putBeforeParent = false
-          } else {
-            if (!returnedEntry.status) {
-              returnedEntry.status = 'pending'
-            }
-            returnedEntry.parentId = entry.id
-            spliceEntry(returnedEntry, true, putBeforeParent)
-            gotNewEntries = true
-          }
-        })
-        return resultEntry
-      }, Promise.resolve(entry))
+        let originalEntryReturned = false
 
-      if (loadedEntry.status !== 'loaded') {
-        throw new Error(`Entry ${loadedEntry.id} could not be loaded by any plugin`)
+        for (const returnedEntry of returnedEntries) {
+          const isOriginalEntry = returnedEntry.id === entry.id
+          const entryRemoved = !entryStore.updateEntry(
+            returnedEntry,
+            isOriginalEntry ? undefined : entry.id,
+            isOriginalEntry ? 'loaded' : 'pending',
+            true,
+            putBeforeParent,
+          )
+
+          if (isOriginalEntry) {
+            // If the original entry is removed, we immediately stop loading it.
+            if (entryRemoved) return
+            // If the original entry is returned, it means it has been loaded,
+            // and we have to stop loading it, but we need to check the rest
+            // of the array for other children, so we don't return immediately.
+            originalEntryReturned = true
+            putBeforeParent = false
+          }
+        }
+
+        if (originalEntryReturned) {
+          return
+        } else if (returnedEntries.length) {
+          throw new Error(
+            `Plugin ${plugin.name} returned some entries from load(), but the original entry wasn't among them. When load() returns something, it must be either the original entry or an array containing it`,
+          )
+        }
       }
+
+      throw new Error(`Entry ${entry.id} could not be loaded by any plugin`)
     })
 
     await Promise.all(promises)
 
-    if (gotNewEntries) {
+    if (entryStore.countEntries('pending')) {
       await loadEntries()
     }
   }
 
   const mapEntries = async () => {
-    let gotNewEntries = false
-
-    const promises = entries.map(async (entry) => {
-      if (entry.status !== 'loaded') return entry
-      entry.status = 'mapping'
-
-      const mappedEntry = await plugins.reduce(async (resultPromise, plugin) => {
-        if (entry.status !== 'mapping' || !plugin.map) return resultPromise
-        const resultEntry = await resultPromise
-        const returnedEntries = await plugin.map(resultEntry, options)
-        let putBeforeParent = true
-        returnedEntries.forEach((returnedEntry) => {
-          if (returnedEntry.id === entry.id) {
-            spliceEntry(returnedEntry, true, false)
-            putBeforeParent = false
-          } else {
-            if (!returnedEntry.status) {
-              returnedEntry.status = 'pending'
-            }
-            returnedEntry.parentId = entry.id
-            spliceEntry(returnedEntry, true, putBeforeParent)
-            gotNewEntries = true
-          }
-        })
-        return resultEntry
-      }, Promise.resolve(entry))
-
-      if (mappedEntry.status === 'mapping') {
-        mappedEntry.status = 'mapped'
+    const promises = entryStore.getEntries('loaded').map(async (entry) => {
+      if (typeof entry.value !== 'object' || !entry.value) {
+        // console.log(entry)
+        throw new Error(
+          `Entry ${entry.id} is supposed to be loaded, but its value is not an object`,
+        )
       }
-      spliceEntry(mappedEntry, true, false)
+
+      entryStore.setEntryStatus(entry.id, 'mapping')
+
+      for (const plugin of plugins) {
+        if (!plugin.map || entryStore.getEntryStatus(entry.id) !== 'mapping') continue
+
+        const returnedEntries = await plugin.map(entry, options)
+        let putBeforeParent = true
+        let originalEntryReturned = false
+
+        for (const returnedEntry of returnedEntries) {
+          const isOriginalEntry = returnedEntry.id === entry.id
+          const entryRemoved = !entryStore.updateEntry(
+            returnedEntry,
+            isOriginalEntry ? undefined : entry.id,
+            'mapping',
+            true,
+            putBeforeParent,
+          )
+
+          if (isOriginalEntry) {
+            // If the original entry is removed, we immediately stop mapping it.
+            if (entryRemoved) return
+            originalEntryReturned = true
+            putBeforeParent = false
+          }
+        }
+
+        if (!originalEntryReturned) {
+          throw new Error(`Plugin ${plugin.name} didn't return entry ${entry.id} while mapping`)
+        }
+      }
+
+      entryStore.setEntryStatus(entry.id, 'mapped')
     })
 
     await Promise.all(promises)
 
-    if (gotNewEntries) {
+    if (entryStore.countEntries('pending')) {
       await loadEntries()
+    }
+
+    if (entryStore.countEntries('loaded')) {
       await mapEntries()
     }
   }
@@ -317,10 +285,7 @@ function dozen<
 
     const reducer = plugins.findLast((p) => p.reduce)
     if (reducer) {
-      configPromise = entries.reduce((configPromise, entry) => {
-        if (entry.status !== 'mapped') {
-          throw new Error(`Attempting to reduce unmapped entry ${entry.id}`)
-        }
+      configPromise = entryStore.getEntries('mapped').reduce((configPromise, entry) => {
         return configPromise.then((config) => reducer.reduce!(config, entry, options))
       }, configPromise)
     }
@@ -344,15 +309,14 @@ function dozen<
   /** Invokes the whole processing pipeline */
   const build = async () => {
     promise = promise.then(async () => {
-      if (!entriesUpdated) return
-      entriesUpdated = false
-      await loadEntries()
-      await mapEntries()
-      if (entriesUpdated) {
-        await buildConfig()
-        entriesUpdated = false
-        triggerWatchCbs()
-      }
+      if (!entryStore.hasUpdates()) return
+      entryStore.clearUpdates()
+      if (entryStore.countEntries('pending')) await loadEntries()
+      if (entryStore.countEntries('loaded')) await mapEntries()
+      if (!entryStore.hasUpdates()) return
+      await buildConfig()
+      entryStore.clearUpdates()
+      triggerWatchCbs()
     })
     await promise
   }
@@ -374,11 +338,8 @@ function dozen<
         .flatMap((item) => {
           return typeof item === 'function' ? item(options) : rawSource(item)(options)
         })
-        .forEach((entry) => {
-          if (!entry.status) {
-            entry.status = 'pending'
-          }
-          spliceEntry(entry, false, false)
+        .forEach((entry: Entry) => {
+          entryStore.updateEntry(entry, undefined, 'pending', false, false)
         })
       if (watchCbs.size) {
         build().catch(handleWatchError)

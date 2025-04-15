@@ -12,9 +12,11 @@ function createFileWatcher() {
     if (eventName === 'error') return
     if (watchedEntries.has(filePath)) {
       const [parentEntry, childEntry] = watchedEntries.get(filePath)!
-      const entry = eventName === 'add' ? parentEntry : childEntry || parentEntry
-      entry.status = 'pending'
-      watchCbs.forEach((cb) => cb(undefined, entry))
+      if (eventName === 'add') {
+        watchCbs.forEach((cb) => cb(undefined, { ...parentEntry }))
+      } else {
+        watchCbs.forEach((cb) => cb(undefined, childEntry && { ...childEntry }, { ...parentEntry }))
+      }
     }
   }
 
@@ -30,6 +32,7 @@ function createFileWatcher() {
      * If a file is modified at the path, the child entry will be emitted.
      */
     add(filePath: string, parentEntry: Entry, childEntry?: Entry) {
+      if (watchedEntries.has(filePath)) return
       // Watch for the dirname instead of the full file path to catch file creation
       chokidar?.add(Path.dirname(filePath))
       watchedEntries.set(filePath, [parentEntry, childEntry])

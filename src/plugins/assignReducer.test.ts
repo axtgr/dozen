@@ -11,7 +11,6 @@ describe('assignReducer', () => {
       id: 'test',
       format: ['json'],
       value: { added: 'value' },
-      status: 'mapped',
     }
 
     // Act
@@ -31,7 +30,6 @@ describe('assignReducer', () => {
       id: 'test',
       format: ['json'],
       value: { name: 'new' },
-      status: 'mapped',
     }
 
     // Act
@@ -49,7 +47,6 @@ describe('assignReducer', () => {
       id: 'test',
       format: ['json'],
       value: { foo: 'bar', baz: 42 },
-      status: 'mapped',
     }
 
     // Act
@@ -67,7 +64,6 @@ describe('assignReducer', () => {
       id: 'test',
       format: ['json'],
       value: {},
-      status: 'mapped',
     }
 
     // Act
@@ -89,19 +85,16 @@ describe('assignReducer', () => {
         id: 'first',
         format: ['json'],
         value: { first: true },
-        status: 'mapped',
       },
       {
         id: 'second',
         format: ['json'],
         value: { second: true },
-        status: 'mapped',
       },
       {
         id: 'third',
         format: ['json'],
         value: { third: true },
-        status: 'mapped',
       },
     ]
 
@@ -127,7 +120,6 @@ describe('assignReducer', () => {
       id: 'test',
       format: ['json'],
       value: entryValue,
-      status: 'mapped',
     }
 
     // Act
