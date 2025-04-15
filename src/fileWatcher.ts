@@ -27,9 +27,6 @@ function createFileWatcher() {
   return {
     /**
      * Adds a file path to the watcher.
-     *
-     * If a file is created at the path, the parent entry will be emitted.
-     * If a file is modified at the path, the child entry will be emitted.
      */
     add(filePath: string, parentEntry: Entry, childEntry?: Entry) {
       if (watchedEntries.has(filePath)) return
