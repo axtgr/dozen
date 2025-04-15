@@ -8,3 +8,4 @@
 - Replace cosmiconfig with a custom implementation.
 - Load from a field in an entry (e.g. package.json).
 - Make loading recursive.
+- Recover from errors in plugins.
