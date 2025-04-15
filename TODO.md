@@ -9,3 +9,4 @@
 - Load from a field in an entry (e.g. package.json).
 - Make loading recursive.
 - Recover from errors in plugins.
+- In fileLoader, if there is no file initially, we need to watch for it to be created.
