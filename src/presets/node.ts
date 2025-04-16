@@ -20,6 +20,9 @@ import objectLoader, { type ObjectLoaderOptions } from '../plugins/objectLoader.
 import parseSchemaTransformer, {
   type ParseSchemaTransformerOptions,
 } from '../plugins/parseSchemaTransformer.ts'
+import pickPropertyMapper, {
+  type PickPropertyMapperOptions,
+} from '../plugins/pickPropertyMapper.ts'
 import prefixMapper, { type PrefixMapperOptions } from '../plugins/prefixMapper.ts'
 import standardSchemaValidator, {
   type StandardSchemaValidatorOptions,
@@ -61,6 +64,7 @@ function dozenForNode<
         Plugin<CoerceStringsMapperOptions>,
         Plugin<KeyCaseMapperOptions>,
         Plugin<ExtendsMapperOptions>,
+        Plugin<PickPropertyMapperOptions>,
         Plugin<AssignReducerOptions>,
         Plugin<ParseSchemaTransformerOptions>,
         Plugin<StandardSchemaValidatorOptions>,
@@ -103,6 +107,7 @@ function dozenForNode<
     coerceStringsMapper,
     keyCaseMapper,
     extendsMapper,
+    pickPropertyMapper,
     assignReducer,
     parseSchemaTransformer,
     standardSchemaValidator,
@@ -134,6 +139,11 @@ function dozenForNode<
       },
     },
     extendsProperty: 'extends',
+    pickProperty: {
+      byFormat: {
+        json: true,
+      },
+    },
     ...options,
     sources,
     plugins,
