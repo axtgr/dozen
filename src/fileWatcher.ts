@@ -11,11 +11,13 @@ function createFileWatcher() {
   const onChange = (eventName: string, filePath: string) => {
     if (eventName === 'error') return
     if (watchedEntries.has(filePath)) {
-      const [parentEntry, childEntry] = watchedEntries.get(filePath)!
-      if (eventName === 'add') {
-        watchCbs.forEach((cb) => cb(undefined, { ...parentEntry }))
+      let [parentEntry, childEntry] = watchedEntries.get(filePath)!
+      parentEntry = { ...parentEntry }
+      if (!childEntry || ['add', 'unlink'].includes(eventName)) {
+        watchCbs.forEach((cb) => cb(undefined, parentEntry))
       } else {
-        watchCbs.forEach((cb) => cb(undefined, childEntry && { ...childEntry }, { ...parentEntry }))
+        childEntry = { ...childEntry }
+        watchCbs.forEach((cb) => cb(undefined, childEntry, parentEntry))
       }
     }
   }
@@ -32,7 +34,7 @@ function createFileWatcher() {
       if (watchedEntries.has(filePath)) return
       // Watch for the dirname instead of the full file path to catch file creation
       chokidar?.add(Path.dirname(filePath))
-      watchedEntries.set(filePath, [parentEntry, childEntry])
+      watchedEntries.set(filePath, [{ ...parentEntry }, childEntry && { ...childEntry }])
     },
 
     async watch(cb: PluginWatchCb) {

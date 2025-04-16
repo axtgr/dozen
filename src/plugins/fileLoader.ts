@@ -10,6 +10,10 @@ function canLoadEntry(entry: Entry) {
   )
 }
 
+function getFormatFromPath(path: string) {
+  return path === '.env' || path.startsWith('.env.') ? 'env' : Path.extname(path).slice(1)
+}
+
 type FileLoaderOptions = object
 
 const fileLoader: PluginFactory<FileLoaderOptions> = () => {
@@ -22,50 +26,35 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
       if (!canLoadEntry(entry)) return
 
       const paths = (Array.isArray(entry.value) ? entry.value : [entry.value]) as string[]
-      let value: string | undefined
-      let filePath: string | undefined
+      let loadedEntry: Entry | undefined
 
       for (const path of paths) {
-        try {
-          value = await fsp.readFile(path, 'utf8')
-          filePath = path
-          break
-        } catch (e) {}
+        const format = getFormatFromPath(path)
+        const meta = { ...entry.meta, filePath: path }
+
+        if (!loadedEntry) {
+          try {
+            const value = await fsp.readFile(path, 'utf8')
+            loadedEntry = {
+              id: `file:loaded:${path}`,
+              format: [format],
+              value,
+              meta,
+            }
+          } catch (e) {}
+        }
+
+        const entryToEmitOnWatch = {
+          id: `file:${path}`,
+          format: ['file', format],
+          value: path,
+          meta,
+        }
+        watcher.add(path, entry, entryToEmitOnWatch)
       }
 
       entry.value = {}
-
-      if (!filePath) {
-        // TODO: even if there is currently no file, it could be added later,
-        // so we should watch the path
-        return entry
-      }
-
-      const fileFormat =
-        filePath === '.env' || filePath.startsWith('.env.')
-          ? 'env'
-          : Path.extname(filePath).slice(1)
-      const format = entry
-        .format!.filter((f) => f !== 'file' && f !== fileFormat)
-        .concat(fileFormat)
-
-      const loadedFileEntry = {
-        id: `file:loaded:${filePath}`,
-        meta: { ...entry.meta, filePath },
-        format,
-        value,
-      }
-
-      const entryToEmitOnWatch = {
-        ...loadedFileEntry,
-        id: `file:${filePath}`,
-        format: format.concat('file'),
-        value: filePath,
-      }
-
-      paths.forEach((filePath) => watcher.add(filePath, entry, entryToEmitOnWatch))
-
-      return [entry, loadedFileEntry]
+      return [entry, loadedEntry]
     },
 
     watch: async (cb) => {
