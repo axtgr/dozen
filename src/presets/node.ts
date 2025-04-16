@@ -17,6 +17,7 @@ import fileLoader, { type FileLoaderOptions } from '../plugins/fileLoader.ts'
 import flattenPropertyMapper, {
   type FlattenPropertyMapperOptions,
 } from '../plugins/flattenPropertyMapper.ts'
+import jsLoader, { type JsLoaderOptions } from '../plugins/jsLoader.ts'
 import jsonLoader, { type JsonLoaderOptions } from '../plugins/jsonLoader.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
 import objectLoader, { type ObjectLoaderOptions } from '../plugins/objectLoader.ts'
@@ -55,6 +56,7 @@ function dozenForNode<
     DozenOptions<
       [Source<ConfigFileSourceOptions>, Source<DotenvSourceOptions>, Source<EnvSourceOptions>],
       [
+        Plugin<JsLoaderOptions>,
         Plugin<FileLoaderOptions>,
         Plugin<ArgvLoaderOptions>,
         Plugin<ObjectLoaderOptions>,
@@ -98,6 +100,7 @@ function dozenForNode<
   }
 
   let plugins: (PluginFactory | Plugin | undefined | null | false)[] = [
+    jsLoader,
     fileLoader,
     argvLoader,
     jsonLoader,
