@@ -28,7 +28,9 @@ class EntryStore {
       return false
     }
 
-    if (parentId) {
+    if (parentId === entry.id) {
+      throw new Error(`Entry ${entry.id} cannot be its own parent`)
+    } else if (parentId) {
       this.#entryParents.set(entry.id, parentId)
     } else {
       parentId = this.#entryParents.get(entry.id)
