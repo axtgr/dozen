@@ -5,4 +5,3 @@
 - Better typing of forks?
 - Pass entry proxies to plugins instead of entries themselves?
 - Recursively search for files upwards until package.json is found.
-- Fix js file entries becoming parents of themselves after watching.
