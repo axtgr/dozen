@@ -215,7 +215,9 @@ function dozen<
         }
       }
 
-      throw new Error(`Entry ${entry.id} could not be loaded by any plugin`)
+      throw new Error(
+        `The following entry could not be loaded by any plugin:\n${JSON.stringify(entry, null, 2)}`,
+      )
     })
 
     await Promise.all(promises)
@@ -230,7 +232,11 @@ function dozen<
       if (typeof entry.value !== 'object' || !entry.value) {
         // console.log(entry)
         throw new Error(
-          `Entry ${entry.id} is supposed to be loaded, but its value is not an object`,
+          `The following entry is supposed to be already loaded, but its value is not an object:\n${JSON.stringify(
+            entry,
+            null,
+            2,
+          )}`,
         )
       }
 
