@@ -3,8 +3,6 @@
 - React integration?
 - If a parent entry changes its order, should the child entries be reordered as well?
 - Better typing of forks?
-- Recover from errors in plugins.
 - Pass entry proxies to plugins instead of entries themselves?
 - Import JS/TS files.
-- Support comments in JSON.
 - Recursively search for files upwards until package.json is found.
