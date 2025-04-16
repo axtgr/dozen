@@ -4,5 +4,5 @@
 - If a parent entry changes its order, should the child entries be reordered as well?
 - Better typing of forks?
 - Pass entry proxies to plugins instead of entries themselves?
-- Import JS/TS files.
 - Recursively search for files upwards until package.json is found.
+- Fix js file entries becoming parents of themselves after watching.
