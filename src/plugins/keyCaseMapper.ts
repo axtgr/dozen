@@ -5,11 +5,11 @@ interface KeyCaseMapperOptions {
   keyCase?: keyof typeof stringCases
 }
 
-const keyCaseMapper: PluginFactory<KeyCaseMapperOptions> = (options = {}) => {
-  const changeCase = options.keyCase && stringCases[options.keyCase]
+const keyCaseMapper: PluginFactory<KeyCaseMapperOptions> = () => {
   return {
     name: 'default:keyCaseMapper',
-    map: async (entry) => {
+    map: async (entry, options) => {
+      const changeCase = options.keyCase && stringCases[options.keyCase]
       if (!changeCase || !entry.value || typeof entry.value !== 'object') return entry
       entry.value = Object.entries(entry.value).reduce(
         (result, [key, value]) => {

@@ -5,7 +5,7 @@ interface CoerceTo {
   number?: boolean
 }
 
-type CoerceStringsMapperOptions = {
+interface CoerceStringsMapperOptions {
   coerceStrings?:
     | boolean
     | (CoerceTo & {
@@ -13,10 +13,10 @@ type CoerceStringsMapperOptions = {
       })
 }
 
-const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = (options = {}) => {
+const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = () => {
   return {
     name: 'default:coerceStringsMapper',
-    map: async (entry) => {
+    map: async (entry, options) => {
       if (!options.coerceStrings) return entry
 
       let coerceTo: CoerceTo
