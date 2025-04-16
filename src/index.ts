@@ -132,15 +132,10 @@ function dozen<
 
   /** Callback provided to the watch() method of plugins */
   const pluginWatchCb: PluginWatchCb = (err, entry, parentEntry) => {
-    console.log()
-    console.log('WATCH', parentEntry?.id)
-    console.log(entry, parentEntry?.id)
     if (err) {
       handleWatchError(err)
     } else if (entry) {
       entryStore.updateEntry(entry, parentEntry?.id, 'pending', true, false)
-      console.log('UPDATED')
-      console.log(entryStore.getEntries())
       build().catch(handleWatchError)
     }
   }
@@ -235,7 +230,6 @@ function dozen<
   const mapEntries = async () => {
     const promises = entryStore.getEntries('loaded').map(async (entry) => {
       if (typeof entry.value !== 'object' || !entry.value) {
-        // console.log(entry)
         throw new Error(
           `The following entry is supposed to be already loaded, but its value is not an object:\n${JSON.stringify(
             entry,
