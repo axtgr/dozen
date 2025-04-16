@@ -10,6 +10,7 @@ function createFileWatcher() {
 
   const onChange = (eventName: string, filePath: string) => {
     if (eventName === 'error') return
+    filePath = Path.normalize(filePath)
     if (watchedEntries.has(filePath)) {
       let [parentEntry, childEntry] = watchedEntries.get(filePath)!
       parentEntry = { ...parentEntry }
@@ -32,6 +33,7 @@ function createFileWatcher() {
      */
     add(filePath: string, parentEntry: Entry, childEntry?: Entry) {
       if (watchedEntries.has(filePath)) return
+      filePath = Path.normalize(filePath)
       // Watch for the dirname instead of the full file path to catch file creation
       chokidar?.add(Path.dirname(filePath))
       watchedEntries.set(filePath, [{ ...parentEntry }, childEntry && { ...childEntry }])
