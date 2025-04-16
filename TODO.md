@@ -3,7 +3,6 @@
 - React integration?
 - If a parent entry changes its order, should the child entries be reordered as well?
 - Better typing of forks?
-- Watch for creation of config files.
 - Load from a field in an entry (e.g. package.json).
 - Recover from errors in plugins.
-- When a file is deleted, remove the entry and stop watching it.
+- Pass entry proxies to plugins instead of entries themselves?
