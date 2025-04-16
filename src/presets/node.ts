@@ -141,7 +141,7 @@ function dozenForNode<
     extendsProperty: 'extends',
     flattenProperty: {
       byFormat: {
-        json: true,
+        'package.json': true,
       },
     },
     ...options,
