@@ -14,15 +14,15 @@ import deepReducer from '../plugins/deepReducer.ts'
 import envLoader, { type EnvLoaderOptions } from '../plugins/envLoader.ts'
 import extendsMapper, { type ExtendsMapperOptions } from '../plugins/extendsMapper.ts'
 import fileLoader, { type FileLoaderOptions } from '../plugins/fileLoader.ts'
+import flattenPropertyMapper, {
+  type FlattenPropertyMapperOptions,
+} from '../plugins/flattenPropertyMapper.ts'
 import jsonLoader, { type JsonLoaderOptions } from '../plugins/jsonLoader.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
 import objectLoader, { type ObjectLoaderOptions } from '../plugins/objectLoader.ts'
 import parseSchemaTransformer, {
   type ParseSchemaTransformerOptions,
 } from '../plugins/parseSchemaTransformer.ts'
-import pickPropertyMapper, {
-  type PickPropertyMapperOptions,
-} from '../plugins/pickPropertyMapper.ts'
 import prefixMapper, { type PrefixMapperOptions } from '../plugins/prefixMapper.ts'
 import standardSchemaValidator, {
   type StandardSchemaValidatorOptions,
@@ -64,7 +64,7 @@ function dozenForNode<
         Plugin<CoerceStringsMapperOptions>,
         Plugin<KeyCaseMapperOptions>,
         Plugin<ExtendsMapperOptions>,
-        Plugin<PickPropertyMapperOptions>,
+        Plugin<FlattenPropertyMapperOptions>,
         Plugin<AssignReducerOptions>,
         Plugin<ParseSchemaTransformerOptions>,
         Plugin<StandardSchemaValidatorOptions>,
@@ -107,7 +107,7 @@ function dozenForNode<
     coerceStringsMapper,
     keyCaseMapper,
     extendsMapper,
-    pickPropertyMapper,
+    flattenPropertyMapper,
     assignReducer,
     parseSchemaTransformer,
     standardSchemaValidator,
@@ -139,9 +139,12 @@ function dozenForNode<
       },
     },
     extendsProperty: 'extends',
-    pickProperty: {
+    flattenProperty: {
       byFormat: {
-        json: true,
+        json: {
+          key: true,
+          ignoreBase: true,
+        },
       },
     },
     ...options,
