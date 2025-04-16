@@ -1,4 +1,14 @@
-import type { PluginFactory } from '../types.ts'
+import Json5 from 'json5'
+import type { Entry, PluginFactory } from '../types.ts'
+
+function canLoadEntry(entry: Entry) {
+  return Boolean(
+    typeof entry.value === 'string' &&
+      (entry.format?.includes('json') ||
+        entry.format?.includes('json5') ||
+        entry.format?.includes('jsonc')),
+  )
+}
 
 type JsonLoaderOptions = object
 
@@ -6,10 +16,13 @@ const jsonLoader: PluginFactory<JsonLoaderOptions> = (options = {}) => {
   return {
     name: 'default:jsonLoader',
     load: async (entry) => {
-      if (!entry.format?.includes('json') || typeof entry.value !== 'string') return
+      if (!canLoadEntry(entry)) {
+        return
+      }
+
       try {
-        const value = entry.value.trim()
-        entry.value = value.length ? JSON.parse(entry.value) : {}
+        const value = (entry.value as string).trim()
+        entry.value = value.length ? Json5.parse(value) : {}
       } catch (e) {}
       return entry
     },

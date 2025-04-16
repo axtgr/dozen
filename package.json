@@ -41,6 +41,7 @@
     "@fastify/deepmerge": "^3.1.0",
     "@standard-schema/spec": "^1.0.0",
     "chokidar": "^4.0.3",
+    "json5": "^2.2.3",
     "text-case": "^1.0.9",
     "zod": "^3.24.2"
   },
