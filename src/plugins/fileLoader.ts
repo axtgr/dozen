@@ -11,7 +11,22 @@ function canLoadEntry(entry: Entry) {
 }
 
 function getFormatFromPath(path: string) {
-  return path === '.env' || path.startsWith('.env.') ? 'env' : Path.extname(path).slice(1)
+  const format = []
+
+  if (path === '.env' || path.startsWith('.env.')) {
+    format.push('env')
+  } else {
+    const extension = Path.extname(path).slice(1)
+    format.push(extension)
+  }
+
+  const basename = Path.basename(path)
+
+  if (['package.json', 'tsconfig.json'].includes(basename)) {
+    format.push(basename)
+  }
+
+  return format
 }
 
 type FileLoaderOptions = object
@@ -37,7 +52,7 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
             const value = await fsp.readFile(path, 'utf8')
             loadedEntry = {
               id: `file:loaded:${path}`,
-              format: [format],
+              format,
               value,
               meta,
             }
@@ -46,7 +61,7 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
 
         const entryToEmitOnWatch = {
           id: `file:${path}`,
-          format: ['file', format],
+          format: ['file', ...format],
           value: path,
           meta,
         }
