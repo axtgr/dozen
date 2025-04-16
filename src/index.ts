@@ -135,7 +135,8 @@ function dozen<
     if (err) {
       handleWatchError(err)
     } else if (entry) {
-      entryStore.updateEntry(entry, parentEntry?.id, 'pending', true, false)
+      const parentId = parentEntry?.id !== entry.id ? parentEntry?.id : undefined
+      entryStore.updateEntry(entry, parentId, 'pending', true, false)
       build().catch(handleWatchError)
     }
   }

@@ -64,17 +64,19 @@ const jsLoader: PluginFactory<JsLoaderOptions> = () => {
               value,
               meta,
             }
-          } catch (e) {
-            console.error(e)
-          }
+          } catch (e) {}
         }
 
-        const entryToEmitOnWatch = {
-          id: `file:${path}`,
-          format: ['file', extension],
-          value: path,
-          meta,
-        }
+        const emitId = `file:${path}`
+        const entryToEmitOnWatch =
+          entry.id === emitId
+            ? undefined
+            : {
+                id: emitId,
+                format: ['file', extension],
+                value: path,
+                meta,
+              }
         watcher.add(path, entry, entryToEmitOnWatch)
       }
 
