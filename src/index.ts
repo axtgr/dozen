@@ -132,10 +132,15 @@ function dozen<
 
   /** Callback provided to the watch() method of plugins */
   const pluginWatchCb: PluginWatchCb = (err, entry, parentEntry) => {
+    console.log()
+    console.log('WATCH', parentEntry?.id)
+    console.log(entry, parentEntry?.id)
     if (err) {
       handleWatchError(err)
     } else if (entry) {
       entryStore.updateEntry(entry, parentEntry?.id, 'pending', true, false)
+      console.log('UPDATED')
+      console.log(entryStore.getEntries())
       build().catch(handleWatchError)
     }
   }
@@ -314,7 +319,10 @@ function dozen<
 
   /** Invokes the whole processing pipeline */
   const build = async () => {
-    promise = promise.then(async () => {
+    // "promise" is used every time a build is triggered, and it shouldn't be rejected
+    // with prior errors.
+    // "buildPromise" is for this particular build, and it keeps the error.
+    const buildPromise = promise.then(async () => {
       if (!entryStore.hasUpdates()) return
       entryStore.clearUpdates()
       if (entryStore.countEntries('pending')) await loadEntries()
@@ -324,7 +332,8 @@ function dozen<
       entryStore.clearUpdates()
       triggerWatchCbs()
     })
-    await promise
+    promise = buildPromise.catch(() => {})
+    await buildPromise
   }
 
   const instance: DozenInstance<TSources, TPlugins, TSchema> = {
