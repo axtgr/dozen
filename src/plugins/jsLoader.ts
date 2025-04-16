@@ -14,11 +14,9 @@ const importers: Record<string, (path: string) => unknown> = {
   js: importPath,
   mjs: importPath,
   cjs: importPath,
-  jsx: importPath,
   ts: importPath,
   mts: importPath,
   cts: importPath,
-  tsx: importPath,
 }
 
 function canLoadEntry(entry: Entry) {
