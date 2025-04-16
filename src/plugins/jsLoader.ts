@@ -4,8 +4,9 @@ import { createFileWatcher } from '../fileWatcher.ts'
 import type { Entry, PluginFactory } from '../types.ts'
 
 const importPath = async (path: string) => {
-  const url = Url.pathToFileURL(path).href
-  const exported = await import(url)
+  const url = Url.pathToFileURL(path)
+  url.searchParams.set('cacheBust', String(Date.now()))
+  const exported = await import(url.href)
   return exported.default
 }
 
