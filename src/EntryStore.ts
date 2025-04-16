@@ -30,6 +30,8 @@ class EntryStore {
 
     if (parentId) {
       this.#entryParents.set(entry.id, parentId)
+    } else {
+      parentId = this.#entryParents.get(entry.id)
     }
 
     const selfIndex = this.#entries.findIndex((e) => e.id === entry.id)
