@@ -254,7 +254,7 @@ function dozen<
           const entryRemoved = !entryStore.updateEntry(
             returnedEntry,
             isOriginalEntry ? undefined : entry.id,
-            'mapping',
+            isOriginalEntry ? 'mapping' : 'pending',
             true,
             putBeforeParent,
           )
