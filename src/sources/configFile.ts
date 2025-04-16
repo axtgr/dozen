@@ -16,18 +16,31 @@ function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceO
         id: 'configFiles',
         format: ['file'],
         value: [
-          `.${name}rc.json`,
-          `.${name}rc.js`,
-          `.${name}rc.cjs`,
-          `.${name}rc.mjs`,
-          `.config/${name}rc`,
-          `.config/${name}rc.json`,
+          // The order is important here because it defines the priority of the files:
+          // the first file to load will be the one used. However, these files are
+          // loaded by two different loaders (jsLoader and fileLoader), and JS/TS files
+          // will load before JSON ones no matter their position in the array, because
+          // jsLoader comes before fileLoader.
+
+          // Loaded by jsLoader
+          `${name}.config.mts`,
+          `${name}.config.cts`,
+          `${name}.config.ts`,
+          `${name}.config.mjs`,
+          `${name}.config.cjs`,
+          `${name}.config.js`,
+          `${name}rc.mjs`,
+          `${name}rc.cjs`,
+          `${name}rc.js`,
           `.config/${name}rc.js`,
           `.config/${name}rc.cjs`,
           `.config/${name}rc.mjs`,
-          `${name}.config.js`,
-          `${name}.config.cjs`,
-          `${name}.config.mjs`,
+
+          // Loaded by fileLoader
+          `.${name}.config.json`,
+          `.${name}rc.json`,
+          `.config/${name}rc`,
+          `.config/${name}rc.json`,
         ],
       },
     ]
