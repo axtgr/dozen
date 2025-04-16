@@ -4,7 +4,8 @@ type PickProperty =
   | boolean
   | string
   | {
-      key: string
+      ignoreBase?: boolean
+      key: string | boolean
     }
 
 interface PickPropertyMapperOptions {
@@ -19,6 +20,7 @@ const pickPropertyMapper: PluginFactory<PickPropertyMapperOptions> = (options) =
       if (!options.pickProperty || entry.meta?.pickedProperty) return entry
 
       let keyToPick: string | boolean | undefined
+      let ignoreBase = false
 
       if (options.pickProperty === true) {
         keyToPick = true
@@ -26,6 +28,7 @@ const pickPropertyMapper: PluginFactory<PickPropertyMapperOptions> = (options) =
         keyToPick = options.pickProperty
       } else {
         keyToPick = options.pickProperty.key
+        ignoreBase = Boolean(options.pickProperty.ignoreBase)
 
         if (options.pickProperty.byFormat) {
           entry.format?.forEach((format) => {
@@ -37,6 +40,7 @@ const pickPropertyMapper: PluginFactory<PickPropertyMapperOptions> = (options) =
               keyToPick = formatOptions
             } else if (formatOptions) {
               keyToPick = formatOptions.key
+              ignoreBase = Boolean(formatOptions.ignoreBase)
             }
           })
         }
@@ -48,14 +52,25 @@ const pickPropertyMapper: PluginFactory<PickPropertyMapperOptions> = (options) =
 
       if (!keyToPick) return entry
 
+      const base = entry.value as any
+      const keyValue = base[keyToPick]
+
+      if ((!keyValue || typeof keyValue !== 'object') && !ignoreBase) {
+        return entry
+      }
+
       const newEntry = {
         id: `pickProperty:${keyToPick}:${entry.id}`,
-        value: (entry.value as any)[keyToPick],
+        value: keyValue,
         format: entry.format?.filter((f) => f !== 'object').concat('object'),
         meta: { ...entry.meta, pickedProperty: keyToPick },
       }
 
-      entry.value = {}
+      if (ignoreBase) {
+        entry.value = {}
+      } else {
+        delete base[keyToPick]
+      }
 
       return [entry, newEntry]
     },
