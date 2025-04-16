@@ -4,7 +4,7 @@ type FlattenProperty =
   | boolean
   | string
   | {
-      ignoreBase?: boolean
+      keepBase?: boolean
       key: string | boolean
     }
 
@@ -20,7 +20,7 @@ const flattenPropertyMapper: PluginFactory<FlattenPropertyMapperOptions> = (opti
       if (!options.flattenProperty || entry.meta?.flattenProperty) return entry
 
       let keyToFlatten: string | boolean | undefined
-      let ignoreBase = false
+      let keepBase = false
 
       if (options.flattenProperty === true) {
         keyToFlatten = true
@@ -28,7 +28,7 @@ const flattenPropertyMapper: PluginFactory<FlattenPropertyMapperOptions> = (opti
         keyToFlatten = options.flattenProperty
       } else {
         keyToFlatten = options.flattenProperty.key
-        ignoreBase = Boolean(options.flattenProperty.ignoreBase)
+        keepBase = Boolean(options.flattenProperty.keepBase)
 
         if (options.flattenProperty.byFormat) {
           entry.format?.forEach((format) => {
@@ -40,7 +40,7 @@ const flattenPropertyMapper: PluginFactory<FlattenPropertyMapperOptions> = (opti
               keyToFlatten = formatOptions
             } else if (formatOptions) {
               keyToFlatten = formatOptions.key
-              ignoreBase = Boolean(formatOptions.ignoreBase)
+              keepBase = Boolean(formatOptions.keepBase)
             }
           })
         }
@@ -55,7 +55,7 @@ const flattenPropertyMapper: PluginFactory<FlattenPropertyMapperOptions> = (opti
       const base = entry.value as any
       const keyValue = base[keyToFlatten]
 
-      if ((!keyValue || typeof keyValue !== 'object') && !ignoreBase) {
+      if ((!keyValue || typeof keyValue !== 'object') && keepBase) {
         return entry
       }
 
@@ -66,7 +66,7 @@ const flattenPropertyMapper: PluginFactory<FlattenPropertyMapperOptions> = (opti
         meta: { ...entry.meta, flattenProperty: { key: keyToFlatten } },
       }
 
-      if (ignoreBase) {
+      if (!keepBase) {
         entry.value = {}
       } else {
         delete base[keyToFlatten]

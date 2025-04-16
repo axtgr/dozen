@@ -141,10 +141,7 @@ function dozenForNode<
     extendsProperty: 'extends',
     flattenProperty: {
       byFormat: {
-        json: {
-          key: true,
-          ignoreBase: true,
-        },
+        json: true,
       },
     },
     ...options,
