@@ -26,7 +26,9 @@ function canLoadEntry(entry: Entry) {
   )
 }
 
-type JsLoaderOptions = object
+interface JsLoaderOptions {
+  cwd?: string
+}
 
 const jsLoader: PluginFactory<JsLoaderOptions> = () => {
   const watcher = createFileWatcher()
@@ -34,9 +36,10 @@ const jsLoader: PluginFactory<JsLoaderOptions> = () => {
   return {
     name: 'default:jsLoader',
 
-    load: async (entry) => {
+    load: async (entry, options) => {
       if (!canLoadEntry(entry)) return
 
+      const cwd = options.cwd || process.cwd()
       const paths = (Array.isArray(entry.value) ? entry.value : [entry.value]) as string[]
       let loadedEntry: Entry | undefined
       const unhandledPaths: string[] = []
@@ -50,11 +53,11 @@ const jsLoader: PluginFactory<JsLoaderOptions> = () => {
           continue
         }
 
-        const meta = { ...entry.meta, filePath: path }
+        const absolutePath = Path.resolve(cwd, path)
+        const meta = { ...entry.meta, filePath: absolutePath }
 
         if (!loadedEntry) {
           try {
-            const absolutePath = Path.resolve(process.cwd(), path)
             const value = await importer(absolutePath)
             loadedEntry = {
               id: `js:loaded:${path}`,

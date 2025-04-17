@@ -29,7 +29,9 @@ function getFormatFromPath(path: string) {
   return format
 }
 
-type FileLoaderOptions = object
+interface FileLoaderOptions {
+  cwd?: string
+}
 
 const fileLoader: PluginFactory<FileLoaderOptions> = () => {
   const watcher = createFileWatcher()
@@ -37,19 +39,21 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
   return {
     name: 'default:fileLoader',
 
-    load: async (entry) => {
+    load: async (entry, options) => {
       if (!canLoadEntry(entry)) return
 
+      const cwd = options.cwd || process.cwd()
       const paths = (Array.isArray(entry.value) ? entry.value : [entry.value]) as string[]
       let loadedEntry: Entry | undefined
 
       for (const path of paths) {
         const format = getFormatFromPath(path)
-        const meta = { ...entry.meta, filePath: path }
+        const absolutePath = Path.resolve(cwd, path)
+        const meta = { ...entry.meta, filePath: absolutePath }
 
         if (!loadedEntry) {
           try {
-            const value = await fsp.readFile(path, 'utf8')
+            const value = await fsp.readFile(absolutePath, 'utf8')
             loadedEntry = {
               id: `file:loaded:${path}`,
               format,
