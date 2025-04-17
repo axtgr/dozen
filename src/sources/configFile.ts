@@ -1,7 +1,17 @@
+import Path from 'node:path'
 import type { Source } from '../types.ts'
 
 interface ConfigFileSourceOptions {
   name?: string
+  cwd?: string
+  projectRoot?: string
+  configFiles?: {
+    /**
+     * Path to the directory until which to recursively look for config files from cwd.
+     * When true, uses projectRoot; when false, looks only in cwd; when a string, uses that path.
+     */
+    lookUpUntil?: string | boolean
+  }
 }
 
 /**
@@ -11,9 +21,23 @@ function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceO
   return (_options) => {
     const name = options?.name || _options.name
     if (!name) return []
-    return [
-      {
-        id: 'configFiles',
+
+    const cwd = _options.cwd || process.cwd()
+    const lookUpUntil = _options.configFiles?.lookUpUntil
+    const stopAt =
+      lookUpUntil === false
+        ? cwd
+        : typeof lookUpUntil === 'string'
+          ? Path.resolve(lookUpUntil)
+          : _options.projectRoot || cwd
+    const stopAtRelative = Path.relative(cwd, stopAt)
+    const pathSegments = ['.'].concat(stopAtRelative.split(Path.sep).filter(Boolean))
+
+    let currentPath: string
+    const entries = pathSegments.map((segment) => {
+      currentPath = currentPath ? Path.join(currentPath, segment) : segment
+      return {
+        id: `configFiles:${currentPath}`,
         format: ['file'],
         value: [
           // The order is important here because it defines the priority of the files:
@@ -23,27 +47,29 @@ function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceO
           // jsLoader comes before fileLoader.
 
           // Loaded by jsLoader
-          `${name}.config.mts`,
-          `${name}.config.cts`,
-          `${name}.config.ts`,
-          `${name}.config.mjs`,
-          `${name}.config.cjs`,
-          `${name}.config.js`,
-          `${name}rc.mjs`,
-          `${name}rc.cjs`,
-          `${name}rc.js`,
-          `.config/${name}rc.js`,
-          `.config/${name}rc.cjs`,
-          `.config/${name}rc.mjs`,
+          Path.join(currentPath, `${name}.config.mts`),
+          Path.join(currentPath, `${name}.config.cts`),
+          Path.join(currentPath, `${name}.config.ts`),
+          Path.join(currentPath, `${name}.config.mjs`),
+          Path.join(currentPath, `${name}.config.cjs`),
+          Path.join(currentPath, `${name}.config.js`),
+          Path.join(currentPath, `${name}rc.mjs`),
+          Path.join(currentPath, `${name}rc.cjs`),
+          Path.join(currentPath, `${name}rc.js`),
+          Path.join(currentPath, `.config/${name}rc.js`),
+          Path.join(currentPath, `.config/${name}rc.cjs`),
+          Path.join(currentPath, `.config/${name}rc.mjs`),
 
           // Loaded by fileLoader
-          `.${name}.config.json`,
-          `.${name}rc.json`,
-          `.config/${name}rc`,
-          `.config/${name}rc.json`,
+          Path.join(currentPath, `.${name}.config.json`),
+          Path.join(currentPath, `.${name}rc.json`),
+          Path.join(currentPath, `.config/${name}rc`),
+          Path.join(currentPath, `.config/${name}rc.json`),
         ],
-      },
-    ]
+      }
+    })
+
+    return entries
   }
 }
 
