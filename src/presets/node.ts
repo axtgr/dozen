@@ -31,7 +31,7 @@ import standardSchemaValidator, {
   type StandardSchemaValidatorOptions,
 } from '../plugins/standardSchemaValidator.ts'
 import argv from '../sources/argv.ts'
-import configFile, { type ConfigFileSourceOptions } from '../sources/configFile.ts'
+import configFiles, { type ConfigFilesSourceOptions } from '../sources/configFiles.ts'
 import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
@@ -89,7 +89,7 @@ function dozenForNode<
 >(
   options?: Omit<
     DozenOptions<
-      [Source<ConfigFileSourceOptions>, Source<DotenvSourceOptions>, Source<EnvSourceOptions>],
+      [Source<ConfigFilesSourceOptions>, Source<DotenvSourceOptions>, Source<EnvSourceOptions>],
       [
         Plugin<JsLoaderOptions>,
         Plugin<FileLoaderOptions>,
@@ -124,7 +124,7 @@ function dozenForNode<
   const name = options?.name
 
   let sources: (Source | Entry | Entry[] | undefined | null | false)[] = [
-    configFile(),
+    configFiles(),
     dotenv(),
     env(),
     ...(options?.sources || []),
@@ -204,7 +204,7 @@ function dozenForNode<
   return dozen(finalOptions)
 }
 
-dozenForNode.configFile = configFile
+dozenForNode.configFiles = configFiles
 dozenForNode.env = env
 dozenForNode.dotenv = dotenv
 dozenForNode.argv = argv

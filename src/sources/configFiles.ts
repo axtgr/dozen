@@ -1,7 +1,7 @@
 import Path from 'node:path'
 import type { Source } from '../types.ts'
 
-interface ConfigFileSourceOptions {
+interface ConfigFilesSourceOptions {
   name?: string
   cwd?: string
   projectRoot?: string
@@ -17,7 +17,7 @@ interface ConfigFileSourceOptions {
 /**
  * Provides config file paths as an entry.
  */
-function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceOptions> {
+function configFiles(options?: ConfigFilesSourceOptions): Source<ConfigFilesSourceOptions> {
   return (_options) => {
     const name = options?.name || _options.name
     if (!name) return []
@@ -73,5 +73,5 @@ function configFile(options?: ConfigFileSourceOptions): Source<ConfigFileSourceO
   }
 }
 
-export default configFile
-export type { ConfigFileSourceOptions }
+export default configFiles
+export type { ConfigFilesSourceOptions }
