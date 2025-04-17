@@ -74,9 +74,7 @@ type DozenInstance<
   /**
    * Creates a new instance of Dozen that inherits the current instance's options,
    * sources and plugins, and adds its own. When building, the fork will first call
-   * build() on the parent instance, then build on top of it.
-   *
-   * Forks currently don't support watching.
+   * build() on the parent instance, then build on top of that.
    */
   fork(
     forkOptions?: DozenOptions<TSources, TPlugins, TSchema>,
@@ -90,12 +88,6 @@ type DozenInstance<
    * @returns A watcher object that can be used to control the watching and catch errors.
    */
   watch(cb?: WatchCb): Watcher
-
-  /**
-   * Stops watching for changes. If a callback is provided, only the corresponding
-   * watcher will be stopped, otherwise stops all watchers.
-   */
-  unwatch(cb?: WatchCb): void
 }
 
 type DozenOptions<
@@ -109,14 +101,14 @@ type DozenOptions<
 } & UnionToIntersection<ExtractOptions<TSources[number]>> &
   UnionToIntersection<ExtractOptions<TPlugins[number]>>
 
-/**
- * Creates a barebones instance of Dozen without any sources or plugins.
- */
-function dozen<
+function dozenBase<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
   TSchema extends StandardSchemaV1 | unknown = unknown,
->(options: DozenOptions<TSources, TPlugins, TSchema>) {
+>(
+  parent: DozenInstance<TSources, TPlugins, TSchema> | undefined,
+  options: DozenOptions<TSources, TPlugins, TSchema>,
+) {
   const plugins = toFilteredArray(options.plugins).map((pluginOrFactory) => {
     const plugin =
       typeof pluginOrFactory === 'function' ? pluginOrFactory(options) : pluginOrFactory
@@ -363,11 +355,12 @@ function dozen<
         sources: [fork(instance), ...(forkOptions?.sources || [])],
         plugins: [forkLoader, ...(options.plugins || []), ...(forkOptions?.plugins || [])],
       }
-      return dozen(mergedOptions)
+      return dozenBase(instance, mergedOptions)
     },
 
     watch(cb?) {
       cb ??= () => {}
+      const parentWatcher = parent?.watch(build)
       const watcher: Watcher = {
         start: () => {
           if (watchCbs.has(cb)) return watcher
@@ -375,38 +368,42 @@ function dozen<
           if (watchCbs.size === 1) {
             plugins.forEach((plugin) => plugin.watch?.(pluginWatchCb, options))
           }
+          parentWatcher?.start()
           return watcher
         },
         stop: () => {
-          instance.unwatch(cb)
+          parentWatcher?.stop()
+          watchCbs.delete(cb)
+          catchCbs.delete(cb)
+          if (!watchCbs.size) {
+            plugins.forEach((plugin) => plugin.unwatch?.(pluginWatchCb, options))
+          }
           return watcher
         },
         catch: (catchCb) => {
           catchCbs.set(cb, catchCb || (() => {}))
+          parentWatcher?.catch(catchCb)
           return watcher
         },
       }
-      watcher.start()
-      return watcher
-    },
-
-    unwatch(cb?) {
-      if (cb) {
-        watchCbs.delete(cb)
-        catchCbs.delete(cb)
-      } else {
-        watchCbs.clear()
-        catchCbs.clear()
-      }
-      if (!watchCbs.size) {
-        plugins.forEach((plugin) => plugin.unwatch?.(pluginWatchCb, options))
-      }
+      return watcher.start()
     },
   }
 
   instance.add(options.sources || [])
 
   return instance
+}
+
+/**
+ * Creates a barebones instance of Dozen without any sources or plugins.
+ */
+function dozen<
+  TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
+  TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
+  TSchema extends StandardSchemaV1 | unknown = unknown,
+>(options: DozenOptions<TSources, TPlugins, TSchema>) {
+  return dozenBase(undefined, options)
 }
 
 export default dozen
