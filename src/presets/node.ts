@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import Path from 'node:path'
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import dozen, {
   type DozenInstance,
@@ -34,6 +36,39 @@ import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
 import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
+
+function findFileUpSync(
+  name: string,
+  cwd = process.cwd(),
+  type: 'any' | 'file' | 'directory' = 'any',
+  stopAt?: string,
+) {
+  let directory = Path.resolve(cwd)
+  const { root } = Path.parse(directory)
+  const isAbsoluteName = Path.isAbsolute(name)
+  stopAt = Path.resolve(directory, stopAt ?? root)
+
+  while (directory) {
+    const filePath = isAbsoluteName ? name : Path.join(directory, name)
+
+    try {
+      const stats = fs.statSync(filePath, { throwIfNoEntry: false })
+      if (
+        (type === 'any' && stats) ||
+        (type === 'file' && stats?.isFile()) ||
+        (type === 'directory' && stats?.isDirectory())
+      ) {
+        return filePath
+      }
+    } catch {}
+
+    if (directory === stopAt || directory === root) {
+      break
+    }
+
+    directory = Path.dirname(directory)
+  }
+}
 
 /**
  * Creates a new instance of Dozen tuned for Node.js-compatible runtimes that loads
@@ -77,6 +112,8 @@ function dozenForNode<
   > & {
     disablePlugins?: (PluginFactory | Plugin | undefined | null | false)[]
     disableSources?: (Source | Entry | Entry[] | undefined | null | false)[]
+    cwd?: string
+    projectRoot?: string
   } & Partial<UnionToIntersection<ExtractOptions<TSources[number]>>> &
     Partial<UnionToIntersection<ExtractOptions<TPlugins[number]>>> & {
       sources?: TSources
@@ -123,7 +160,17 @@ function dozenForNode<
     })
   }
 
-  const finalOptions: DozenOptions<typeof sources, typeof plugins, TSchema> = {
+  const cwd = Path.resolve(options?.cwd || process.cwd())
+
+  let projectRoot = options?.projectRoot
+  if (projectRoot) {
+    projectRoot = Path.resolve(projectRoot)
+  } else {
+    const filePath = findFileUpSync('package.json', cwd)
+    projectRoot = filePath ? Path.dirname(filePath) : cwd
+  }
+
+  const finalOptions = {
     prefix: name
       ? {
           byFormat: {
@@ -148,9 +195,11 @@ function dozenForNode<
       },
     },
     ...options,
+    cwd,
+    projectRoot,
     sources,
     plugins,
-  }
+  } as DozenOptions<typeof sources, typeof plugins, TSchema>
 
   return dozen(finalOptions)
 }
