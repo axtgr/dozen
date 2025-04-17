@@ -59,11 +59,11 @@ const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = () => {
 
           if (coerceTo.boolean) {
             const lowerCaseValue = value.toLowerCase()
-            if (lowerCaseValue === 'true' || lowerCaseValue === '1') {
+            if (lowerCaseValue === 'true') {
               result[key] = true
               return result
             }
-            if (lowerCaseValue === 'false' || lowerCaseValue === '0') {
+            if (lowerCaseValue === 'false') {
               result[key] = false
               return result
             }
