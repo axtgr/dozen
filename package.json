@@ -1,7 +1,7 @@
 {
   "name": "dozen",
   "version": "1.2.0",
-  "description": "Load config from a dozen sources, normalize and validate with Zod, Valibot or ArkType",
+  "description": "Load config from a dozen sources, transform and validate with Zod, Valibot or ArkType",
   "author": "Alex Schneider <me@schneider.ax>",
   "license": "ISC",
   "repository": "https://github.com/axtgr/dozen",

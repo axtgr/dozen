@@ -3,7 +3,7 @@
 <h1 align="center">Dozen</h1>
 
 <p align="center">
-  <strong>Load config from a dozen sources, normalize and validate with Zod, Valibot or ArkType</strong>
+  <strong>Load config from a dozen sources, transform and validate with Zod, Valibot or ArkType</strong>
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 
 <br>
 
-Dozen is a TypeScript library that loads configuration for your app from various sources, such as config files, .env files, environment variables, CLI arguments, plain objects and others. It then normalizes the values (e.g. coerces to numbers and booleans) and keys (e.g. converts to camelCase), merges them into a single object and validates it against a schema if required. It can watch the sources for changes and automatically rebuild the config and notify the user.
+Dozen is a TypeScript library that loads configuration for your app from various sources, such as JSON files, .env files, environment variables, CLI arguments, plain objects and others. It then normalizes the values (e.g. coerces to numbers and booleans) and keys (e.g. converts to camelCase), merges them into a single object and validates it against a schema if required. It can watch the sources for changes and automatically rebuild the config and notify the user.
 
 The library is designed to be extensible by using a plugin system similar to that of Rollup/Vite. Every step of the pipeline can be customized by adding or disabling a plugin or source. For example, you can add a plugin that reads from a database or parses TOML syntax.
 
