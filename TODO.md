@@ -3,3 +3,4 @@
 - If a parent entry changes its order, should the child entries be reordered as well?
 - Better typing of forks?
 - Pass entry proxies to plugins instead of entries themselves?
+- Watch for changes in dependencies of config files.
