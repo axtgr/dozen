@@ -15,7 +15,6 @@
         "@biomejs/biome": "^1.9.4",
         "@types/bun": "^1.2.8",
         "@types/node": "^22.13.10",
-        "type-fest": "^4.37.0",
         "typescript": "^5.8.2",
       },
     },
@@ -96,8 +95,6 @@
     "text-upper-case": ["text-upper-case@1.0.2", "", {}, "sha512-1YT5Y+gCOskZOGPVQW2xAGsSDlItHJoFVCVviObJAPv7Qdedf8sCHCKrz0hG15uzF8IQsiJz5PJZUMNwpuNmmA=="],
 
     "text-upper-case-first": ["text-upper-case-first@1.0.2", "", {}, "sha512-/8IAqNltnOZixqKMFn34NQoHcq5Mek/zqXzMQyLeY/5oQK+3ibYseRDHNnrdqx2r8Uiyf/KyVe8PHQFL+yAtlg=="],
-
-    "type-fest": ["type-fest@4.37.0", "", {}, "sha512-S/5/0kFftkq27FPNye0XM1e2NsnoD/3FS+pBmbjmmtLT6I+i344KoOf7pvXreaFsDamWeaJX55nczA1m5PsBDg=="],
 
     "typescript": ["typescript@5.8.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ=="],
 
