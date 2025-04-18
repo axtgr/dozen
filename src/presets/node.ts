@@ -35,6 +35,7 @@ import configFiles, { type ConfigFilesSourceOptions } from '../sources/configFil
 import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
+import raw from '../sources/raw.ts'
 import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
 
 function findFileUpSync(
@@ -114,6 +115,7 @@ function dozen<
     disableSources?: (Source | Entry | Entry[] | undefined | null | false)[]
     cwd?: string
     projectRoot?: string
+    defaults?: object
   } & Partial<UnionToIntersection<ExtractOptions<TSources[number]>>> &
     Partial<UnionToIntersection<ExtractOptions<TPlugins[number]>>> & {
       sources?: TSources
@@ -124,6 +126,7 @@ function dozen<
   const name = options?.name
 
   let sources: (Source | Entry | Entry[] | undefined | null | false)[] = [
+    options?.defaults && raw(options.defaults),
     configFiles(),
     dotenv(),
     env(),
