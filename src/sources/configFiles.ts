@@ -69,7 +69,8 @@ function configFiles(options?: ConfigFilesSourceOptions): Source<ConfigFilesSour
       }
     })
 
-    return entries
+    // Files closest to cwd override files in parent directories
+    return entries.toReversed()
   }
 }
 
