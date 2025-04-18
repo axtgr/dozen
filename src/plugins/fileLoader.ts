@@ -17,7 +17,7 @@ function getFormatFromPath(path: string) {
     format.push('env')
   } else {
     const extension = Path.extname(path).slice(1)
-    format.push(extension)
+    extension && format.push(extension)
   }
 
   const basename = Path.basename(path)
