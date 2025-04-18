@@ -7,6 +7,7 @@ interface ConfigFilesSourceOptions {
   cwd?: string
   projectRoot?: string
   configFiles?: {
+    name?: string
     /**
      * Path to the directory until which to recursively look for config files from cwd.
      * When true, uses projectRoot; when false, looks only in cwd; when a string, uses that path.
@@ -18,12 +19,15 @@ interface ConfigFilesSourceOptions {
 /**
  * Provides config file paths as an entry.
  */
-function configFiles(options?: ConfigFilesSourceOptions): Source<ConfigFilesSourceOptions> {
-  return (_options) => {
-    const name = options?.name || _options.name
+function configFiles(
+  sourceOptions?: ConfigFilesSourceOptions['configFiles'],
+): Source<ConfigFilesSourceOptions> {
+  return (options) => {
+    const name = sourceOptions?.name || options.configFiles?.name || options.name
+
     if (!name) return []
 
-    const lookUpUntil = _options.configFiles?.lookUpUntil
+    const lookUpUntil = sourceOptions?.lookUpUntil || options.configFiles?.lookUpUntil
     return findUpFromCwd(
       (path) => {
         return {
@@ -108,7 +112,7 @@ function configFiles(options?: ConfigFilesSourceOptions): Source<ConfigFilesSour
           ],
         }
       },
-      _options,
+      options,
       lookUpUntil,
     )
   }
