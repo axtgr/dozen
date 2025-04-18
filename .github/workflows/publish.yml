@@ -20,7 +20,7 @@ jobs:
           checkName: ci
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Fail if CI has failed
-        if: steps.wait-for-ci.outputs.conclusion == 'failure'
+        if: steps.wait-for-ci.outputs.conclusion != 'success'
         run: exit 1
       - name: Check out the repository
         uses: actions/checkout@v4

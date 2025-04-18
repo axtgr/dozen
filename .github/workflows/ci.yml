@@ -33,6 +33,9 @@ jobs:
           name: build
           path: dist
 
+  # For some reason, the "action-wait-for-check" step in the other worklfows works
+  # only if "ci" is a separate job. If "test-and-build" is renamed to "ci", that step
+  # never detects the completion of the job.
   ci:
     needs: test-and-build
     runs-on: ubuntu-latest
