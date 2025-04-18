@@ -4,3 +4,6 @@
 - Better typing of forks?
 - Pass entry proxies to plugins instead of entries themselves?
 - Watch for changes in dependencies of config files.
+- Rename dozenForNode to dozen
+- Node.js: stripping types is currently unsupported for files under node_modules
+- Load configs from .myapp dir
