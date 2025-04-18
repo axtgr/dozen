@@ -4,4 +4,5 @@
 - Better typing of forks?
 - Pass entry proxies to plugins instead of entries themselves?
 - Watch for changes in dependencies of config files.
-- Load configs from .myapp dir
+- Load config from .myapp dir
+- Load config from homedir
