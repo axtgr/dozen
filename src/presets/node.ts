@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import Path from 'node:path'
 import type { StandardSchemaV1 } from '@standard-schema/spec'
-import dozen, {
+import vanillaDozen, {
   type DozenInstance,
   type DozenOptions,
   type ExtractOptions,
@@ -82,7 +82,7 @@ function findFileUpSync(
  *
  * Then normalizes and validates the config object with the given schema (if provided).
  */
-function dozenForNode<
+function dozen<
   TSources extends (Source | Entry | Entry[] | undefined | null | false)[],
   TPlugins extends (PluginFactory | Plugin | undefined | null | false)[],
   TSchema extends StandardSchemaV1 | unknown = unknown,
@@ -201,15 +201,15 @@ function dozenForNode<
     plugins,
   } as DozenOptions<typeof sources, typeof plugins, TSchema>
 
-  return dozen(finalOptions)
+  return vanillaDozen(finalOptions)
 }
 
-dozenForNode.configFiles = configFiles
-dozenForNode.env = env
-dozenForNode.dotenv = dotenv
-dozenForNode.argv = argv
-dozenForNode.file = file
-dozenForNode.assignReducer = assignReducer
-dozenForNode.deepReducer = deepReducer
+dozen.configFiles = configFiles
+dozen.env = env
+dozen.dotenv = dotenv
+dozen.argv = argv
+dozen.file = file
+dozen.assignReducer = assignReducer
+dozen.deepReducer = deepReducer
 
-export default dozenForNode
+export default dozen
