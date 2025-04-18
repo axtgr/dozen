@@ -7,3 +7,5 @@
 - Rename dozenForNode to dozen
 - Node.js: stripping types is currently unsupported for files under node_modules
 - Load configs from .myapp dir
+- Review the order of path segments when loading config files
+- Defaults
