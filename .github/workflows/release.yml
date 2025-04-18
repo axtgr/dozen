@@ -13,6 +13,15 @@ jobs:
         node: ['23.6.0']
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Wait for the CI workflow to complete
+        id: wait-for-ci
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        with:
+          checkName: ci
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fail if CI has failed
+        if: steps.wait-for-ci.outputs.conclusion != 'success'
+        run: exit 1
       - name: Check out the repository
         uses: actions/checkout@v4
       - name: Create a GitHub release
