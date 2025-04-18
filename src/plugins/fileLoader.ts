@@ -44,24 +44,13 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
 
       const cwd = options.cwd || process.cwd()
       const paths = (Array.isArray(entry.value) ? entry.value : [entry.value]) as string[]
-      let loadedEntry: Entry | undefined
 
-      for (const path of paths) {
+      // We need to load the first file that exists. Reading them one by one is too slow,
+      // so we stat them all in parallel and then read the first one that exists.
+      const promises = paths.map(async (path) => {
         const format = getFormatFromPath(path)
         const absolutePath = Path.resolve(cwd, path)
         const meta = { ...entry.meta, filePath: absolutePath }
-
-        if (!loadedEntry) {
-          try {
-            const value = await fsp.readFile(absolutePath, 'utf8')
-            loadedEntry = {
-              id: `file:loaded:${path}`,
-              format,
-              value,
-              meta,
-            }
-          } catch (e) {}
-        }
 
         const entryToEmitOnWatch = {
           id: `file:${path}`,
@@ -70,9 +59,29 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
           meta,
         }
         watcher.add(path, entry, entryToEmitOnWatch)
+
+        try {
+          const stats = await fsp.stat(absolutePath)
+          if (stats.isFile()) {
+            return {
+              id: `file:loaded:${path}`,
+              format,
+              meta,
+            }
+          }
+        } catch (e) {}
+      })
+
+      const results = await Promise.all(promises)
+      const loadedEntry = results.find(Boolean)
+
+      if (loadedEntry) {
+        const value = await fsp.readFile(loadedEntry.meta.filePath, 'utf8')
+        ;(loadedEntry as Entry).value = value
       }
 
       entry.value = {}
+
       return [entry, loadedEntry]
     },
 
