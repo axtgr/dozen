@@ -46,25 +46,75 @@ function configFiles(options?: ConfigFilesSourceOptions): Source<ConfigFilesSour
           // will load before JSON ones no matter their position in the array, because
           // jsLoader comes before fileLoader.
 
-          // Loaded by jsLoader
+          // LOADED BY jsLoader
+
+          // Root dir
           Path.join(currentPath, `${name}.config.mts`),
           Path.join(currentPath, `${name}.config.cts`),
           Path.join(currentPath, `${name}.config.ts`),
           Path.join(currentPath, `${name}.config.mjs`),
           Path.join(currentPath, `${name}.config.cjs`),
           Path.join(currentPath, `${name}.config.js`),
-          Path.join(currentPath, `${name}rc.mjs`),
-          Path.join(currentPath, `${name}rc.cjs`),
-          Path.join(currentPath, `${name}rc.js`),
-          Path.join(currentPath, `.config/${name}rc.js`),
-          Path.join(currentPath, `.config/${name}rc.cjs`),
-          Path.join(currentPath, `.config/${name}rc.mjs`),
+          Path.join(currentPath, `.${name}rc.mjs`),
+          Path.join(currentPath, `.${name}rc.cjs`),
+          Path.join(currentPath, `.${name}rc.js`),
 
-          // Loaded by fileLoader
-          Path.join(currentPath, `.${name}.config.json`),
+          // .name dir
+          Path.join(currentPath, `.${name}/${name}.config.mts`),
+          Path.join(currentPath, `.${name}/${name}.config.cts`),
+          Path.join(currentPath, `.${name}/${name}.config.ts`),
+          Path.join(currentPath, `.${name}/${name}.config.mjs`),
+          Path.join(currentPath, `.${name}/${name}.config.cjs`),
+          Path.join(currentPath, `.${name}/${name}.config.js`),
+          Path.join(currentPath, `.${name}/${name}rc.mjs`),
+          Path.join(currentPath, `.${name}/${name}rc.cjs`),
+          Path.join(currentPath, `.${name}/${name}rc.js`),
+          Path.join(currentPath, `.${name}/.${name}rc.mjs`),
+          Path.join(currentPath, `.${name}/.${name}rc.cjs`),
+          Path.join(currentPath, `.${name}/.${name}rc.js`),
+          Path.join(currentPath, `.${name}/config.mts`),
+          Path.join(currentPath, `.${name}/config.cts`),
+          Path.join(currentPath, `.${name}/config.ts`),
+          Path.join(currentPath, `.${name}/config.mjs`),
+          Path.join(currentPath, `.${name}/config.cjs`),
+          Path.join(currentPath, `.${name}/config.js`),
+
+          // .config dir
+          Path.join(currentPath, `.config/${name}.config.mts`),
+          Path.join(currentPath, `.config/${name}.config.cts`),
+          Path.join(currentPath, `.config/${name}.config.ts`),
+          Path.join(currentPath, `.config/${name}.config.mjs`),
+          Path.join(currentPath, `.config/${name}.config.cjs`),
+          Path.join(currentPath, `.config/${name}.config.js`),
+          Path.join(currentPath, `.config/${name}rc.mjs`),
+          Path.join(currentPath, `.config/${name}rc.cjs`),
+          Path.join(currentPath, `.config/${name}rc.js`),
+          Path.join(currentPath, `.config/.${name}.mjs`),
+          Path.join(currentPath, `.config/.${name}.cjs`),
+          Path.join(currentPath, `.config/.${name}.js`),
+
+          // LOADED BY fileLoader
+
+          // Root dir
+          Path.join(currentPath, `${name}.config.json`),
+          Path.join(currentPath, `.${name}rc`),
           Path.join(currentPath, `.${name}rc.json`),
+
+          // .name dir
+          Path.join(currentPath, `.${name}/${name}.config.json`),
+          Path.join(currentPath, `.${name}/${name}rc`),
+          Path.join(currentPath, `.${name}/${name}rc.json`),
+          Path.join(currentPath, `.${name}/.${name}rc.json`),
+          Path.join(currentPath, `.${name}/config.json`),
+
+          // .config dir
+          Path.join(currentPath, `.config/${name}.config.json`),
           Path.join(currentPath, `.config/${name}rc`),
           Path.join(currentPath, `.config/${name}rc.json`),
+          Path.join(currentPath, `.config/${name}.json`),
+          Path.join(currentPath, `.config/.${name}rc`),
+          Path.join(currentPath, `.config/.${name}rc.json`),
+          Path.join(currentPath, `.config/.${name}.json`),
         ],
       }
     })
