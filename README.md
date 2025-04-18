@@ -9,16 +9,16 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/dozen"><img src="https://img.shields.io/npm/v/dozen" alt="npm package"></a>
   &nbsp;
+  <a href="https://github.com/axtgr/dozen/actions"><img src="https://img.shields.io/github/actions/workflow/status/axtgr/dozen/ci.yml?label=CI&logo=github" alt="CI"></a>
+  &nbsp;
   <a href="https://www.buymeacoffee.com/axtgr"><img src="https://img.shields.io/badge/%F0%9F%8D%BA-Buy%20me%20a%20beer-red?style=flat" alt="Buy me a beer"></a>
 </p>
 
 <br>
 
-Dozen is a TypeScript library that loads configuration for your app from various sources, such as JSON and .env files, environment variables, CLI arguments, plain objects and others. It then normalizes the values (e.g. coerces to numbers and booleans) and keys (e.g. converts to camelCase), merges them into a single object and validates it against a schema if required. It can watch the sources for changes and automatically rebuild the config and notify the user.
+Dozen is a TypeScript library for Node.js-compatible runtimes. It loads configuration for your app from various sources, such as JSON and .env files, environment variables, CLI arguments, plain objects and others. It then normalizes the values (e.g. coerces to numbers and booleans) and keys (e.g. converts to camelCase), merges them into a single object and validates it against a schema if required. It can watch the sources for changes and automatically rebuild the config and notify the user.
 
 The library is designed to be extensible by using a plugin system similar to that of Rollup/Vite. Every step of the pipeline can be customized by adding or disabling a plugin or source. For example, you can add a plugin that reads from a database or parses TOML syntax.
-
-Currently, Dozen ships .ts files and can be used only in an environment that runs TypeScript, such as Node.js v23.6+ or Bun.js.
 
 ## Quickstart
 
@@ -161,6 +161,7 @@ These options are used by Dozen itself:
 | `disablePlugins` | `undefined \| (PluginFactory \| Plugin \| undefined \| null \| false)[]`    | An array of plugins to disable. Use to disable default plugins.                                                                                                                                        |
 | `cwd`            | `undefined \| string`                                                       | Working directory. File paths will be resolved relative to this. Defaults to process.cwd()                                                                                                             |
 | `projectRoot`    | `undefined \| string`                                                       | Path to the project root. When searching for files, some plugins will traverse directories from `cwd` to `projectRoot`. Defaults to the nearest ancestor of `cwd` that contains a `package.json` file. |
+| `defaults`       | `undefined \| object`                                                       | An object with values to use as defaults. Alternatively, if you provide a schema, you can set default values there.                                                                                    |
 
 These are options used by the default plugins (if a plugin is disabled, its options are ignored):
 
