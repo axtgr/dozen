@@ -25,17 +25,19 @@
     "bun": ">=1.2.4"
   },
   "type": "module",
-  "main": "./src/presets/node.ts",
+  "main": "./dist/presets/node.js",
   "files": [
-    "src"
+    "dist"
   ],
   "exports": {
-    ".": "./src/presets/node.ts",
-    "./base": "./src/index.ts",
-    "./plugins/*": "./src/plugins/*.ts"
+    ".": "./dist/presets/node.js",
+    "./base": "./dist/index.js",
+    "./plugins/*": "./dist/plugins/*.js"
   },
   "scripts": {
-    "test": "bun test"
+    "test": "bun test",
+    "clean": "rimraf dist",
+    "build": "bun run clean && tsc"
   },
   "dependencies": {
     "@fastify/deepmerge": "^3.1.0",
@@ -48,6 +50,7 @@
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "^1.2.8",
     "@types/node": "^22.13.10",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.2"
   }
 }

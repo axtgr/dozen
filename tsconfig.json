@@ -1,8 +1,11 @@
 {
+  "include": ["src/**/*.ts"],
   "compilerOptions": {
+    "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
-    "noEmit": true,
+    "noEmit": false,
+    "declaration": true,
     "target": "esnext",
     "module": "nodenext",
     "rewriteRelativeImportExtensions": true,
