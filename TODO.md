@@ -5,5 +5,6 @@
 - Pass entry proxies to plugins instead of entries themselves?
 - Watch for changes in dependencies of config files.
 - Load config from homedir
-- Add support for ignore files such as .gitignore (load the values into an array property)
 - Autodetect format of strings when no format is specified
+- Critical vs non-critical errors
+- Per-entry options?
