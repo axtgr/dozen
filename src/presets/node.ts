@@ -19,6 +19,7 @@ import fileLoader, { type FileLoaderOptions } from '../plugins/fileLoader.ts'
 import flattenPropertyMapper, {
   type FlattenPropertyMapperOptions,
 } from '../plugins/flattenPropertyMapper.ts'
+import ignoreLoader, { type IgnoreLoaderOptions } from '../plugins/ignoreLoader.ts'
 import jsLoader, { type JsLoaderOptions } from '../plugins/jsLoader.ts'
 import jsonLoader, { type JsonLoaderOptions } from '../plugins/jsonLoader.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
@@ -35,6 +36,7 @@ import configFiles, { type ConfigFilesSourceOptions } from '../sources/configFil
 import dotenv, { type DotenvSourceOptions } from '../sources/dotenv.ts'
 import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
+import ignoreFiles from '../sources/ignoreFiles.ts'
 import raw from '../sources/raw.ts'
 import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
 
@@ -98,6 +100,7 @@ function dozen<
         Plugin<ObjectLoaderOptions>,
         Plugin<JsonLoaderOptions>,
         Plugin<EnvLoaderOptions>,
+        Plugin<IgnoreLoaderOptions>,
         Plugin<PrefixMapperOptions>,
         Plugin<CoerceStringsMapperOptions>,
         Plugin<KeyCaseMapperOptions>,
@@ -128,6 +131,7 @@ function dozen<
   let sources: (Source | Entry | Entry[] | undefined | null | false)[] = [
     options?.defaults && raw(options.defaults),
     configFiles(),
+    ignoreFiles(),
     dotenv(),
     env(),
     ...(options?.sources || []),
@@ -145,6 +149,7 @@ function dozen<
     argvLoader,
     jsonLoader,
     envLoader,
+    ignoreLoader,
     objectLoader,
     prefixMapper,
     coerceStringsMapper,
@@ -208,6 +213,7 @@ function dozen<
 }
 
 dozen.configFiles = configFiles
+dozen.ignoreFiles = ignoreFiles
 dozen.env = env
 dozen.dotenv = dotenv
 dozen.argv = argv
