@@ -25,7 +25,9 @@ import jsLoader, { type JsLoaderOptions } from '../plugins/jsLoader.ts'
 import jsonLoader, { type JsonLoaderOptions } from '../plugins/jsonLoader.ts'
 import keyCaseMapper, { type KeyCaseMapperOptions } from '../plugins/keyCaseMapper.ts'
 import objectLoader, { type ObjectLoaderOptions } from '../plugins/objectLoader.ts'
-import parseTransformer, { type ParseTransformerOptions } from '../plugins/parseTransformer.ts'
+import parseWithSchemaTransformer, {
+  type ParseWithSchemaTransformerOptions,
+} from '../plugins/parseWithSchemaTransformer.ts'
 import prefixMapper, { type PrefixMapperOptions } from '../plugins/prefixMapper.ts'
 import standardSchemaValidator, {
   type StandardSchemaValidatorOptions,
@@ -75,7 +77,7 @@ function dozen<
         Plugin<ExtendsMapperOptions>,
         Plugin<FlattenPropertyMapperOptions>,
         Plugin<AssignReducerOptions>,
-        Plugin<ParseTransformerOptions>,
+        Plugin<ParseWithSchemaTransformerOptions>,
         Plugin<StandardSchemaValidatorOptions>,
       ],
       TSchema
@@ -126,7 +128,7 @@ function dozen<
     extendsMapper,
     flattenPropertyMapper,
     assignReducer,
-    parseTransformer,
+    parseWithSchemaTransformer,
     standardSchemaValidator,
     ...(options?.plugins || []),
   ]
