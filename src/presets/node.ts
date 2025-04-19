@@ -103,7 +103,6 @@ function dozen<
   let sources: (Source | Entry | Entry[] | undefined | null | false)[] = [
     options?.defaults && raw(options.defaults),
     configFiles(),
-    ignoreFiles(),
     dotenv(),
     env(),
     ...(options?.sources || []),
