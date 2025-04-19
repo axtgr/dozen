@@ -8,3 +8,5 @@
 - Autodetect format of strings when no format is specified
 - Critical vs non-critical errors
 - Per-entry options?
+- Disable particular instances of plugins and sources
+- Export plugins
