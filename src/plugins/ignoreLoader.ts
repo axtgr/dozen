@@ -6,7 +6,7 @@ function canLoadEntry(entry: Entry) {
 }
 
 interface IgnoreLoaderOptions {
-  ignore?: {
+  ignorePatterns?: {
     field?: string
   }
 }
@@ -19,7 +19,7 @@ const ignoreLoader: PluginFactory<IgnoreLoaderOptions> = (options = {}) => {
         return
       }
 
-      const field = options.ignore?.field || 'ignore'
+      const field = options.ignorePatterns?.field || 'ignore'
 
       try {
         const { patterns } = parseGitignore.parse(entry.value as string)
