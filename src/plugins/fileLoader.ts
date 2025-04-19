@@ -48,14 +48,18 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
       // We need to load the first file that exists. Reading them one by one is too slow,
       // so we stat them all in parallel and then read the first one that exists.
       const promises = paths.map(async (path) => {
-        const format = getFormatFromPath(path)
+        const pathFormat = getFormatFromPath(path)
+        const formatArray = [...(entry.format || []), ...pathFormat].filter(
+          (f) => f !== 'file' && f,
+        )
+        const format = [...new Set(formatArray)]
         const absolutePath = Path.resolve(cwd, path)
         const meta = { ...entry.meta, filePath: absolutePath }
 
         const entryToEmitOnWatch = {
           id: `file:${path}`,
-          format: ['file', ...format],
           value: path,
+          format: ['file', ...format],
           meta,
         }
         watcher.add(path, entry, entryToEmitOnWatch)
