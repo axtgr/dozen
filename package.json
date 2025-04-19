@@ -44,6 +44,7 @@
     "@standard-schema/spec": "^1.0.0",
     "chokidar": "^4.0.3",
     "json5": "^2.2.3",
+    "mime": "^4.0.7",
     "parse-gitignore": "^2.0.0",
     "text-case": "^1.0.9"
   },

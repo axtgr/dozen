@@ -15,6 +15,7 @@ import coerceStringsMapper, {
 import deepReducer from '../plugins/deepReducer.ts'
 import envLoader, { type EnvLoaderOptions } from '../plugins/envLoader.ts'
 import extendsMapper, { type ExtendsMapperOptions } from '../plugins/extendsMapper.ts'
+import fetchLoader, { type FetchLoaderOptions } from '../plugins/fetchLoader.ts'
 import fileLoader, { type FileLoaderOptions } from '../plugins/fileLoader.ts'
 import flattenPropertyMapper, {
   type FlattenPropertyMapperOptions,
@@ -36,6 +37,7 @@ import env, { type EnvSourceOptions } from '../sources/env.ts'
 import file from '../sources/file.ts'
 import ignoreFiles from '../sources/ignoreFiles.ts'
 import raw from '../sources/raw.ts'
+import url from '../sources/url.ts'
 import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
 
 function findFileUpSync(
@@ -94,6 +96,7 @@ function dozen<
       [
         Plugin<JsLoaderOptions>,
         Plugin<FileLoaderOptions>,
+        Plugin<FetchLoaderOptions>,
         Plugin<ArgvLoaderOptions>,
         Plugin<ObjectLoaderOptions>,
         Plugin<JsonLoaderOptions>,
@@ -144,6 +147,7 @@ function dozen<
   let plugins: (PluginFactory | Plugin | undefined | null | false)[] = [
     jsLoader,
     fileLoader,
+    fetchLoader,
     argvLoader,
     jsonLoader,
     envLoader,
@@ -216,6 +220,7 @@ dozen.env = env
 dozen.dotenv = dotenv
 dozen.argv = argv
 dozen.file = file
+dozen.url = url
 dozen.assignReducer = assignReducer
 dozen.deepReducer = deepReducer
 
