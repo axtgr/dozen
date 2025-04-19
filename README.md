@@ -53,8 +53,8 @@ const dz = dozen({
   // The merged config object will be validated against this schema.
   // This can be any standard schema, e.g. from Zod, Valibot, ArkType, etc.
   schema: z.object({
-    host: z.string(),
-    port: z.number().default(80),
+    host: z.string().default('localhost'),
+    port: z.number(),
     enabled: z.boolean(),
   })
 })
@@ -70,22 +70,25 @@ dz.add(dozen.argv())
 dz.add(dozen.ignoreFiles())
 
 // It accepts plain objects as well
-dz.add({ host: 'localhost', port: 3000 })
+dz.add({ port: 3000 })
 
 // .get() returns the cached config without building it
 console.log(dz.get()) // => {} because dz.build() has not been called yet
 
-// - Reads from:
+// - Reads:
 //     1. The "myapp" field in package.json
-//     2. myapp.config.json, myapprc.yaml, .myapprc, etc. (recursively up to project root)
+//     2. myapp.config.json, myapprc.yaml, .myapprc, etc.
+//        (searches up to the project root until one is found)
 //     3. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
 //     4. Environment variables (process.env)
 //     5. The config.json file in the current working directory
-//     6. The file from the https://localhost:3000/config.json URL
-//     6. CLI arguments (process.argv)
-//     7. .myappignore files (searched recursively up to project root), patterns will be added to the "ignore" field
-//     8. The config object passed to dz.add()
+//     6. The https://localhost:3000/config.json URL
+//     7. CLI arguments (process.argv)
+//     8. .myappignore files
+//        (searches up to the project root until one is found)
+//     9. The config object passed to dz.add()
 // - For env values, keeps only those with the MYAPP_ prefix, then removes the prefix
+// - Adds patterns from .myappignore files to the array in the "ignore" property
 // - Coerces strings to numbers and booleans for env and argv values when applicable
 // - Converts keys to camelCase
 // - Validates with the schema
