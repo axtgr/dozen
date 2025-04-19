@@ -54,31 +54,37 @@ const dz = dozen({
   // This can be any standard schema, e.g. from Zod, Valibot, ArkType, etc.
   schema: z.object({
     host: z.string(),
-    port: z.number(),
+    port: z.number().default(80),
     enabled: z.boolean(),
   })
 })
 
 // Sources can be added later
 dz.add(dozen.file('config.json'))
+dz.add(dozen.url('https://localhost:3000/config.json'))
 
 // CLI arguments aren't read by default, but supported via dozen.argv()
 dz.add(dozen.argv())
 
+// Ignore files (.myappignore) are also supported via dozen.ignoreFiles()
+dz.add(dozen.ignoreFiles())
+
 // It accepts plain objects as well
-dz.add({ port: 8008 })
+dz.add({ host: 'localhost', port: 3000 })
 
 // .get() returns the cached config without building it
 console.log(dz.get()) // => {} because dz.build() has not been called yet
 
 // - Reads from:
 //     1. The "myapp" field in package.json
-//     2. myapp.config.json, myapprc.yaml, .myapprc and other config files with the given name
+//     2. myapp.config.json, myapprc.yaml, .myapprc, etc. (recursively up to project root)
 //     3. .env, .env.local, .env.${NODE_ENV}, .env.${NODE_ENV}.local files
 //     4. Environment variables (process.env)
 //     5. The config.json file in the current working directory
-//     5. CLI arguments (process.argv)
-//     6. The config object passed to dz.add()
+//     6. The file from the https://localhost:3000/config.json URL
+//     6. CLI arguments (process.argv)
+//     7. .myappignore files (searched recursively up to project root), patterns will be added to the "ignore" field
+//     8. The config object passed to dz.add()
 // - For env values, keeps only those with the MYAPP_ prefix, then removes the prefix
 // - Coerces strings to numbers and booleans for env and argv values when applicable
 // - Converts keys to camelCase
@@ -170,6 +176,7 @@ These are options used by the default plugins (if a plugin is disabled, its opti
 | `name`            | `string`                                                                                                                                                                       | The name of the app. Used to search for config files and package.json fields, and as a prefix for env vars.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `schema`          | `StandardSchemaV1`                                                                                                                                                             | The schema to validate against. By default, any Standard Schema library is supported (e.g. Zod, Valibot, ArkType).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `configFiles`     | `{ lookUpUntil?: string \| boolean }`                                                                                                                                          | `lookUpUntil`: when true, will search for config files from `cwd` up to `projectRoot`; when false, will search for config files only in `cwd`; when a path, will search for config files in directories from `cwd` up to the path.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `ignorePatterns`  | `{ field?: string }`                                                                                                                                                           | Defines what to do with ignore patterns from files like .gitignore and other sources. `field`: defines the field to set to the array of ignore patterns (e.g. if `field` is set to `"exclude"`, a .gitignore file containing the two lines `dist/` and `build/` would be parsed into `{ exclude: ['dist/', 'build/'] }`). Defaults to `ignore`.                                                                                                                                                                                                                                                                                                                                 |
 | `prefix`          | `{ filter?: boolean \| string; remove?: boolean \| string; byFormat?: Record<string, { filter?: boolean \| string; remove?: boolean \| string }> }`                            | `filter`: when true, only keys starting with `name` will be kept.; when a string, only keys starting with that string will be kept; when false, all keys will be kept.<br>`remove`: when true, the prefix matching `name` will be removed from keys; when a string, the prefix matching that string will be removed; when false, no prefix will be removed.<br>`byFormat`: an object that specifies prefix options for each format separately (e.g. `env: { filter: true, remove: false }`).                                                                                                                                                                                    |
 | `keyCase`         | `'camel' \| 'pascal' \| 'kebab' \| 'snake' \| 'constant' \| 'upper' \| 'upperFirst' \| 'lower' \| 'lowerFirst' \| 'swap' \| 'capital' \| 'dot' \| 'none' \| 'path' \| 'title'` | The string case to convert keys to. Defaults to `camel`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `coerceStrings`   | `{ boolean?: boolean; number?: boolean; byFormat?: Record<string, boolean \| { boolean?: boolean; number?: boolean }> }`                                                       | `boolean`: when true, converts strings "true" and "false" to their boolean counterparts.<br>`number`: when true, converts numerical strings to numbers ("12" → 12).<br>`byFormat`: an object that specifies coerceStrings options for each format separately (e.g. `env: { boolean: true, number: false }`).                                                                                                                                                                                                                                                                                                                                                                    |
