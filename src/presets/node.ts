@@ -1,6 +1,6 @@
-import fs from 'node:fs'
 import Path from 'node:path'
 import type { StandardSchemaV1 } from '@standard-schema/spec'
+import { findFileUpSync } from '../fileUtils.ts'
 import vanillaDozen, {
   type DozenInstance,
   type DozenOptions,
@@ -39,39 +39,6 @@ import ignoreFiles from '../sources/ignoreFiles.ts'
 import raw from '../sources/raw.ts'
 import url from '../sources/url.ts'
 import type { Entry, Plugin, PluginFactory, Source } from '../types.ts'
-
-function findFileUpSync(
-  name: string,
-  cwd = process.cwd(),
-  type: 'any' | 'file' | 'directory' = 'any',
-  stopAt?: string,
-) {
-  let directory = Path.resolve(cwd)
-  const { root } = Path.parse(directory)
-  const isAbsoluteName = Path.isAbsolute(name)
-  stopAt = Path.resolve(directory, stopAt ?? root)
-
-  while (directory) {
-    const filePath = isAbsoluteName ? name : Path.join(directory, name)
-
-    try {
-      const stats = fs.statSync(filePath, { throwIfNoEntry: false })
-      if (
-        (type === 'any' && stats) ||
-        (type === 'file' && stats?.isFile()) ||
-        (type === 'directory' && stats?.isDirectory())
-      ) {
-        return filePath
-      }
-    } catch {}
-
-    if (directory === stopAt || directory === root) {
-      break
-    }
-
-    directory = Path.dirname(directory)
-  }
-}
 
 /**
  * Creates a new instance of Dozen tuned for Node.js-compatible runtimes that loads

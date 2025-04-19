@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import Path from 'node:path'
 
 /**
@@ -31,4 +32,37 @@ function findUpFromCwd<T>(
   return result
 }
 
-export { findUpFromCwd }
+function findFileUpSync(
+  name: string,
+  cwd = process.cwd(),
+  type: 'any' | 'file' | 'directory' = 'any',
+  stopAt?: string,
+) {
+  let directory = Path.resolve(cwd)
+  const { root } = Path.parse(directory)
+  const isAbsoluteName = Path.isAbsolute(name)
+  stopAt = Path.resolve(directory, stopAt ?? root)
+
+  while (directory) {
+    const filePath = isAbsoluteName ? name : Path.join(directory, name)
+
+    try {
+      const stats = fs.statSync(filePath, { throwIfNoEntry: false })
+      if (
+        (type === 'any' && stats) ||
+        (type === 'file' && stats?.isFile()) ||
+        (type === 'directory' && stats?.isDirectory())
+      ) {
+        return filePath
+      }
+    } catch {}
+
+    if (directory === stopAt || directory === root) {
+      break
+    }
+
+    directory = Path.dirname(directory)
+  }
+}
+
+export { findUpFromCwd, findFileUpSync }
