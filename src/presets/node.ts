@@ -12,6 +12,7 @@ import assignReducer, { type AssignReducerOptions } from '../plugins/assignReduc
 import coerceStringsMapper, {
   type CoerceStringsMapperOptions,
 } from '../plugins/coerceStringsMapper.ts'
+import customTransformer, { type CustomTransformerOptions } from '../plugins/customTransformer.ts'
 import deepReducer from '../plugins/deepReducer.ts'
 import envLoader, { type EnvLoaderOptions } from '../plugins/envLoader.ts'
 import extendsMapper, { type ExtendsMapperOptions } from '../plugins/extendsMapper.ts'
@@ -78,6 +79,7 @@ function dozen<
         Plugin<FlattenPropertyMapperOptions>,
         Plugin<AssignReducerOptions>,
         Plugin<ParseWithSchemaTransformerOptions>,
+        Plugin<CustomTransformerOptions>,
         Plugin<StandardSchemaValidatorOptions>,
       ],
       TSchema
@@ -129,6 +131,7 @@ function dozen<
     flattenPropertyMapper,
     assignReducer,
     parseWithSchemaTransformer,
+    customTransformer,
     standardSchemaValidator,
     ...(options?.plugins || []),
   ]
