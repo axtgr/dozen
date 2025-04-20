@@ -10,3 +10,4 @@
 - Per-entry options?
 - Disable particular instances of plugins and sources
 - Export plugins
+- Logging
