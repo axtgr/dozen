@@ -93,7 +93,7 @@ console.log(dz.get()) // => {} because dz.build() has not been called yet
 // - Converts keys to camelCase
 // - Validates with the schema
 
-const config = await dzn.build()
+const config = await dz.build()
 
 console.log(dz.get()) // => { host: 'localhost', port: 8008, enabled: true }
 console.log(config) // Same as above
