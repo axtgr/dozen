@@ -70,7 +70,7 @@ const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = () => {
           }
 
           if (coerceTo.number) {
-            const number = parseFloat(value)
+            const number = Number(value.trim())
             if (!Number.isNaN(number)) {
               result[key] = number
               return result
