@@ -122,7 +122,7 @@ values when applicable, then merges and validates the config object with the giv
 (if provided).
 
 
-#### `async .build(): Promise\<object\>`
+#### `async .build(): Promise<object>`
 
 Builds the config object (if needed) and returns it.
 
