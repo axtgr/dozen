@@ -52,7 +52,7 @@ const coerceStringsMapper: PluginFactory<CoerceStringsMapperOptions> = () => {
 
       const value = Object.entries(entry.value as object).reduce(
         (result, [key, value]) => {
-          if (typeof value !== 'string') {
+          if (typeof value !== 'string' || value === '') {
             result[key] = value
             return result
           }
