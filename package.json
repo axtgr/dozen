@@ -1,6 +1,6 @@
 {
   "name": "dozen",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Load config from a dozen sources, transform and validate with Zod, Valibot or ArkType",
   "author": "Alex Schneider <me@schneider.ax>",
   "license": "ISC",
