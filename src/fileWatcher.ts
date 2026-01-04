@@ -15,16 +15,16 @@ function createFileWatcher() {
       let [parentEntry, childEntry] = watchedEntries.get(filePath)!
       parentEntry = { ...parentEntry }
       if (!childEntry || ['add', 'unlink'].includes(eventName)) {
-        watchCbs.forEach((cb) => cb(undefined, parentEntry))
+        watchCbs.forEach((cb) => void cb(undefined, parentEntry))
       } else {
         childEntry = { ...childEntry }
-        watchCbs.forEach((cb) => cb(undefined, childEntry, parentEntry))
+        watchCbs.forEach((cb) => void cb(undefined, childEntry, parentEntry))
       }
     }
   }
 
   const onError = (err: unknown) => {
-    watchCbs.forEach((cb) => cb(err))
+    watchCbs.forEach((cb) => void cb(err))
   }
 
   return {
@@ -47,7 +47,7 @@ function createFileWatcher() {
         })
         chokidar.on('all', onChange)
         chokidar.on('error', onError)
-        watchedEntries.keys().forEach((filePath) => chokidar!.add(filePath))
+        watchedEntries.keys().forEach((filePath) => void chokidar!.add(filePath))
       }
     },
 

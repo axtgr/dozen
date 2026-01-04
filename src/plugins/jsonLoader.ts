@@ -12,7 +12,7 @@ function canLoadEntry(entry: Entry) {
 
 type JsonLoaderOptions = object
 
-const jsonLoader: PluginFactory<JsonLoaderOptions> = (options = {}) => {
+const jsonLoader: PluginFactory<JsonLoaderOptions> = (_options = {}) => {
   return {
     name: 'default:jsonLoader',
     load: async (entry) => {
@@ -23,7 +23,7 @@ const jsonLoader: PluginFactory<JsonLoaderOptions> = (options = {}) => {
       try {
         const value = (entry.value as string).trim()
         entry.value = value.length ? Json5.parse(value) : {}
-      } catch (e) {}
+      } catch (_e) {}
       return entry
     },
   }

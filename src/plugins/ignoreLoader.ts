@@ -26,7 +26,7 @@ const ignoreLoader: PluginFactory<IgnoreLoaderOptions> = (options = {}) => {
         entry.value = {
           [field]: patterns,
         }
-      } catch (e) {
+      } catch (_e) {
         entry.value = {}
       }
 

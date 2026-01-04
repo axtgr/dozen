@@ -21,7 +21,7 @@ function findUpFromCwd<T>(
   const pathSegments = ['.'].concat(stopAtRelative.split(Path.sep).filter(Boolean))
 
   const result: T[] = []
-  let currentPath: string | undefined = undefined
+  let currentPath: string | undefined
 
   for (const segment of pathSegments) {
     currentPath = currentPath ? Path.join(currentPath, segment) : segment

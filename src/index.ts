@@ -7,13 +7,14 @@ import type { Entry, Plugin, PluginFactory, PluginWatchCb, Source } from './type
 import { toFilteredArray } from './utils.ts'
 import wrapPlugin from './wrapPlugin.ts'
 
-type ExtractOptions<T> = T extends Source<infer O>
-  ? O
-  : T extends PluginFactory<infer O>
+type ExtractOptions<T> =
+  T extends Source<infer O>
     ? O
-    : T extends Plugin<infer O>
+    : T extends PluginFactory<infer O>
       ? O
-      : never
+      : T extends Plugin<infer O>
+        ? O
+        : never
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
@@ -139,11 +140,13 @@ function dozenBase<
    **/
   const handleWatchError = (err: unknown) => {
     if (catchCbs.size) {
-      catchCbs.forEach((catchCb) => catchCb(err))
+      catchCbs.forEach((catchCb) => void catchCb(err))
     } else {
+      // biome-ignore lint/suspicious/noConsole: _
       console.error(
         'Dozen: an error occurred while watching, and no catch handler is defined, so the error was ignored. Assign catch handlers to watchers to handle errors',
       )
+      // biome-ignore lint/suspicious/noConsole: _
       console.error(err)
     }
   }
@@ -158,9 +161,11 @@ function dozenBase<
         if (catchCb) {
           catchCb(err)
         } else {
+          // biome-ignore lint/suspicious/noConsole: _
           console.error(
             'Dozen: an error occurred inside a watch handler, and no corresponding catch handler is defined, so the error was ignored. Assign a catch handler to the watcher to handle errors',
           )
+          // biome-ignore lint/suspicious/noConsole: _
           console.error(err)
         }
       }
@@ -366,7 +371,7 @@ function dozenBase<
           if (watchCbs.has(cb)) return watcher
           watchCbs.add(cb)
           if (watchCbs.size === 1) {
-            plugins.forEach((plugin) => plugin.watch?.(pluginWatchCb, options))
+            plugins.forEach((plugin) => void plugin.watch?.(pluginWatchCb, options))
           }
           parentWatcher?.start()
           return watcher
@@ -376,7 +381,7 @@ function dozenBase<
           watchCbs.delete(cb)
           catchCbs.delete(cb)
           if (!watchCbs.size) {
-            plugins.forEach((plugin) => plugin.unwatch?.(pluginWatchCb, options))
+            plugins.forEach((plugin) => void plugin.unwatch?.(pluginWatchCb, options))
           }
           return watcher
         },

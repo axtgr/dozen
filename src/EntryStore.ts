@@ -16,7 +16,7 @@ class EntryStore {
   /**
    * Adds, replaces or removes a given entry and repositions it if needed
    */
-  updateEntry(
+  public updateEntry(
     entry: Entry,
     parentId: Entry['id'] | undefined,
     status: EntryStatus,

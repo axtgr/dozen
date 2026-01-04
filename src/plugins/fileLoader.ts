@@ -73,7 +73,7 @@ const fileLoader: PluginFactory<FileLoaderOptions> = () => {
               meta,
             }
           }
-        } catch (e) {}
+        } catch (_e) {}
       })
 
       const results = await Promise.all(promises)

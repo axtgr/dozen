@@ -65,7 +65,7 @@ const jsLoader: PluginFactory<JsLoaderOptions> = () => {
               value,
               meta,
             }
-          } catch (e) {}
+          } catch (_e) {}
         }
 
         const emitId = `file:${path}`
