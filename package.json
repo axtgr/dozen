@@ -19,10 +19,10 @@
     "zod"
   ],
   "private": true,
-  "packageManager": "bun@1.2.4",
+  "packageManager": "bun@1.3.6",
   "engines": {
     "node": ">=23.6.0",
-    "bun": ">=1.2.4"
+    "bun": ">=1.3.6"
   },
   "type": "module",
   "main": "./dist/presets/node.js",
