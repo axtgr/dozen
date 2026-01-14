@@ -95,7 +95,7 @@ describe('argvLoader', () => {
     // Assert
     expect(resultArray.length).toBe(1)
     expect(resultArray[0].id).toBe('test')
-    expect(resultArray[0].value).toEqual({ debug: true, verbose: true, 'no-color': true })
+    expect(resultArray[0].value).toEqual({ debug: true, verbose: true, color: false })
   })
 
   test('handles empty array values', async () => {
