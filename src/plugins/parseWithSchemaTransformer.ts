@@ -2,6 +2,9 @@ import type { PluginFactory } from '../types.ts'
 
 interface ParseWithSchemaTransformerOptions {
   schema?: unknown
+  /**
+   * If the `schema` option is set, and this value is true or undefined, Dozen will attempt to call `schema.parse(config)`; if this value is a function, it will be called instead.
+   */
   parseWithSchema?: boolean | ((config: object, schema: unknown) => Promise<object> | object)
 }
 

@@ -6,6 +6,11 @@ function canLoadEntry(entry: Entry) {
 }
 
 interface IgnoreLoaderOptions {
+  /**
+   * Defines what to do with ignore patterns from files like .gitignore and other sources.
+   *
+   * - `field`: defines the field to set to the array of ignore patterns (e.g. if `field` is set to `"exclude"`, a .gitignore file containing the two lines `dist/` and `build/` would be parsed into `{ exclude: ['dist/', 'build/'] }`). Defaults to `ignore`.
+   */
   ignorePatterns?: {
     field?: string
   }

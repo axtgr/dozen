@@ -1,6 +1,9 @@
 import type { PluginFactory } from '../types.ts'
 
 interface CustomTransformerOptions {
+  /**
+   * A custom function for transforming the config object before it is validated.
+   */
   transform?: (config: object, options: object) => Promise<object> | object
 }
 

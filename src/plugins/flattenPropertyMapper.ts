@@ -10,6 +10,17 @@ type FlattenProperty =
 
 interface FlattenPropertyMapperOptions {
   name?: string
+  /**
+   * The property of a value to use instead of the value itself. For example, when it's "foo", the entry `{ foo: { bar: 'baz' } }` will be replaced with `{ bar: 'baz' }`.
+   *
+   * When true, uses the `name` option; when false, doesn't flatten anything; when a string, uses that property.
+   *
+   * When `keepBase` is true, it will merge the property into its parent object, otherwise it will replace it (default).
+   *
+   * `byFormat`: an object that specifies flattenProperty options for each format separately (e.g. `env: { key: true, keepBase: true }`).
+   *
+   * By default this is used to replace `package.json` entries with the value of their property whose key equals the `name` option.
+   */
   flattenProperty?: FlattenProperty & { byFormat: Record<string, FlattenProperty> }
 }
 

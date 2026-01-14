@@ -2,6 +2,9 @@ import type { PluginFactory } from '../types.ts'
 import { stringCases } from '../utils.ts'
 
 interface KeyCaseMapperOptions {
+  /**
+   * The string case to convert keys to. Defaults to `camel`.
+   */
   keyCase?: keyof typeof stringCases
 }
 

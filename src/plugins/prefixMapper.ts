@@ -2,6 +2,13 @@ import type { PluginFactory } from '../types.ts'
 
 interface PrefixMapperOptions {
   name?: string
+  /**
+   * Specifies how key prefixes are handled. For example, only keys starting with "myapp_" could be kept and then that prefix removed (`myapp_key` → `key`).
+   *
+   * - `filter`: when true, only keys starting with `name` will be kept; when a string, only keys starting with that string will be kept; when false, all keys will be kept.
+   * - `remove`: when true, the prefix matching `name` will be removed from keys; when a string, the prefix matching that string will be removed; when false, no prefix will be removed.
+   * - `byFormat`: an object that specifies prefix options for each format separately (e.g. `env: { filter: true, remove: false }`)
+   */
   prefix?: {
     filter?: boolean | string
     remove?: boolean | string

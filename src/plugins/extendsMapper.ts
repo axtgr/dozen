@@ -2,6 +2,11 @@ import Path from 'node:path'
 import type { PluginFactory } from '../types.ts'
 
 interface ExtendsMapperOptions {
+  /**
+   * The property to use as a file path for extending the config object.
+   *
+   * For example, if the value is "extends", and one of the sources has this property set to "base.json" (`{ extends: './base.json' }`), Dozen will attempt to load "./base.json".
+   */
   extendsProperty?: string
 }
 

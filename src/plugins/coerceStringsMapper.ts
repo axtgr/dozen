@@ -6,6 +6,13 @@ interface CoerceTo {
 }
 
 interface CoerceStringsMapperOptions {
+  /**
+   * Defines how strings are converted to other types.
+   *
+   * - `boolean`: when true, converts strings "true" and "false" to their boolean counterparts.
+   * - `number`: when true, converts numerical strings to numbers ("12" → 12).
+   * - `byFormat`: an object that specifies coerceStrings options for each format separately (e.g. `env: { boolean: true, number: false }`).
+   */
   coerceStrings?:
     | boolean
     | (CoerceTo & {
